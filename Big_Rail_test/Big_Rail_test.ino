@@ -1,52 +1,47 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
-#include <Servo.h>
+#include <servo.h>
 
-AccelStepper stepper(1,54,55); //dir then pulse
-Servo servo;
-long strokelengthmm = 400; //mm
-double step_per_rev=800; //default is 1600
-double mm_per_rev = 72;
-double mmPerStep = mm_per_rev/step_per_rev;
-int switch1 = 3;
-int switch2 = 9;
-int pos=45;
-void setup() {
-  Serial.begin(9600);
-  pinMode(switch1,INPUT_PULLUP);
+AccelStepper stepper(1,54,55); //1 is a default setting, 54 is the pin connected to the "DIR+" or direction pin on the driver, 55 is the pin connected to "PUL+" or pulse pin
+Servo frettingservo; //initialize servo                    
+long strokelengthmm = 400; //long for maximum travel distance of fretting rail in mm. Accel stepper requires that inputs to movement functions is long (i think)
+double step_per_rev=800; //number of steps per revolution of motor, given by stepper driver. Stepper drive has small DIP switches to select this
+double mm_per_rev = 72; //Exerimentally determined number of mm traveled per revolution. This is used to convert from mm distances to number of steps.
+double mmPerStep = mm_per_rev/step_per_rev; //conversion factor
+int switch1 = 3; //signal pin for home limit switch (near headstock)
+int switch2 = 9; //signal pin for end stop limit switch (near body)
+int pos=45; //variable to set initial position of frettingservo upon startup, in degrees, of the fretting servo
+void setup() { //runs once upon power up
+  Serial.begin(9600);  
+  pinMode(switch1,INPUT_PULLUP); //define limit switch pins as inputs, with internal pullup resistors used on arduino. Makes it so that no external resistor is needed with switch
   pinMode(switch2,INPUT_PULLUP);
-  servo.attach(11);
-  servo.write(pos);
-  stepper.setMaxSpeed(1000000.0);
-  delay(1000);
-  //gohome();
-  //Serial.print("hello");
+  frettingservo.attach(11);  //defines signal pin for servo
+  frettingservo.write(pos);  //move servo to angle defined by pos (intended to be not pressing string at first)
+  stepper.setMaxSpeed(1000000.0); //set arbitrarily high max speed, in units of [pulses/sec] (max reliable is about 4000 according to accelstepper)
+  delay(1000); //wait for things to finish moving
+  gohome(); //do homing routine (see below)
+  
   
 }
 
 void loop() {
-//gotoangle(20);
-//delay(1000);
-//gotoangle(40);
-//delay(1000);
-
 
 
  
 }
 void gohome(){
-  long strokelength=ceil(strokelengthmm/mmPerStep);
-  stepper.moveTo(strokelength);
-  while(digitalRead(switch1)==0){
-    stepper.setSpeed(-300);
-    stepper.run();
+  long strokelength=ceil(strokelengthmm/mmPerStep); // convert stroke length from mm to number of steps. This way the carriage will always travel far enough to hit the home switch.
+  stepper.moveTo(strokelength);  //sets the target position in steps, of the stepper motor. It does not actually tell it to move yet. 
+  while(digitalRead(switch1)==0){  //while the switch is not pressed, do the following
+    stepper.setSpeed(-300); //setting the speed, with negative being towards the home switch. Setting the position in each instance of a loop, makes it travel at a constant speed. If is confusion talk to sam for a shitty explanation
+    stepper.run(); //Executes a step in each iteration of the loop. Does math to achieve desired speed and accel
     //Serial.println(stepper.currentPosition());
   }
-  stepper.setCurrentPosition(0);
+  stepper.setCurrentPosition(0); //once home, set position to zero for reference
   delay(1000);
 }
 
-void gotoPositionAtSpeed(long posmm, float spedmm, float accelmm){
+void gotoPositionAtSpeed(long posmm, float spedmm, float accelmm){ 
     long numSteps=ceil(posmm/mmPerStep);
     float Speed=spedmm/mmPerStep;
     float acceleration=accelmm/mmPerStep;
@@ -101,14 +96,14 @@ void trapmotion( long posmm, float t){     // this function uses a trapezoidal m
 
 void gotoangle(int a){
   //pos=90;
-  while (servo.read()!=a){
-    if(a>servo.read()){
+  while (frettingservo.read()!=a){
+    if(a>frettingservo.read()){
       pos++;
     }
-    if(a<servo.read()){
+    if(a<frettingservo.read()){
       pos--;
     }
-    servo.write(pos);
+    frettingservo.write(pos);
     delay(15);
   }
 }
