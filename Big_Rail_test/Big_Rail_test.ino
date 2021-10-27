@@ -1,6 +1,6 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
-#include <servo.h>
+#include <Servo.h>
 
 AccelStepper stepper(1,54,55); //1 is a default setting, 54 is the pin connected to the "DIR+" or direction pin on the driver, 55 is the pin connected to "PUL+" or pulse pin
 Servo frettingservo; //initialize servo                    
@@ -25,7 +25,7 @@ void setup() { //runs once upon power up
 }
 
 void loop() {
-
+trapmotion(100,2);
 
  
 }
