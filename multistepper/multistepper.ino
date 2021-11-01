@@ -1,4 +1,4 @@
-#include <AccelStepper.h>
+/*#include <AccelStepper.h>
 #include <MultiStepper.h>
 #include <Servo.h>
 
@@ -106,4 +106,61 @@ void gotoangle(int a){
     frettingservo.write(pos);
     delay(15);
   }
+}*/
+
+#include <AccelStepper.h>
+#include <MultiStepper.h>
+#include <Servo.h>
+
+AccelStepper fretting(1,54,55); //using x-step pins
+AccelStepper strumming(1,60,61); //using y-step pins
+Servo muting;
+Servo majorminor;
+
+int strumhome=3;
+int frethome=14;
+
+long fret_strokelengthmm = 400; 
+double fret_step_per_rev=800; 
+double fret_mm_per_rev = 72; 
+double fret_mmPerStep = fret_mm_per_rev/fret_step_per_rev;
+
+long strum_strokelengthmm;
+double strum_step_per_rev;
+double strum_mm_per_rev;
+double strum_mmPerStep =  strum_mm_per_rev/strum_step_per_rev;
+
+int majorminor_angle = 45;
+int mute_angle = 0;
+
+void setup() { 
+  Serial.begin(9600);  
+  pinMode(strumhome,INPUT_PULLUP); 
+  pinMode(frethome,INPUT_PULLUP);
+  majorminor.attach(11);  
+  majorminor.write(majorminor_angle);  
+  muting.attach(4);
+  muting.write(mute_angle);
+  stepper.setMaxSpeed(1000000.0); //set arbitrarily high max speed, in units of [pulses/sec] (max reliable is about 4000 according to accelstepper)
+  delay(1000); 
+  gohome();  
+}
+
+void gohome(){
+  long fret_strokelength=ceil(fret_strokelengthmm/fret_mmPerStep);
+  long strum_strokelength=ceil(strum_strokelengthmm/strum_mmPerStep);
+
+  fretting.moveTo(fret_strokelength);
+  strumming.moveTo(strum_strokelength);
+  
+  
+}
+  /*long strokelength=ceil(strokelengthmm/mmPerStep); 
+  stepper.moveTo(strokelength);  
+  while(digitalRead(switch1)==0){  
+    stepper.setSpeed(-300); 
+    stepper.run(); 
+  }
+  stepper.setCurrentPosition(0); //once home, set position to zero for reference
+  delay(1000);
 }
