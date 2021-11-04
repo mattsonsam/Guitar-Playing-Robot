@@ -54,12 +54,16 @@ void setup() {
 
 void loop(){ //here is where we will call all our functions
   servosUp();
-  strum(500, strumPosRight);
-  strum(500, strumPosLeft);
+  strum(700, strumPosRight);
+  strum(700, strumPosLeft);
+  servosChangingFrets();
   moveFretter(1000);
-  strum(500, strumPosRight);
-  strum(500, strumPosLeft);
+  servosUp();
+  strum(700, strumPosRight);
+  strum(700, strumPosLeft);
+  servosChangingFrets();
   moveFretter(1500);
+  servosUp();
 }
 
 //------------------------------------END VOID LOOP---------------------------------------------------------------
