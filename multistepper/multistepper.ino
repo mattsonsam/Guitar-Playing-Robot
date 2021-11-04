@@ -8,8 +8,8 @@ AccelStepper strumming(1,60,61); //using y-step pins
 Servo muting;
 Servo majorminor;
 
-int strumhome=3; //pin for limit switch for strummer
-int frethome=14; //pin for limit switch for fretter
+int frethome=3; //pin for limit switch for fretter
+int strumhome=14; //pin for limit switch for strummer
 
 long fret_strokelengthmm = 400; //the length of the entire fretting linear rail
 double fret_step_per_rev=800; // steps per revolution of stepper
@@ -21,12 +21,17 @@ double strum_step_per_rev;
 double strum_mm_per_rev;
 double strum_mmPerStep = strum_mm_per_rev/strum_step_per_rev;
 
-int majorminor_down = 0;
-int majorminor_up = 45;
-//int majorminor_angle = 45;
-int mute_down = 0; //this needs to be determined
-int mute_up = 45; //this needs to be determined 
+int fretHomingSpeed = -500;
+int strumHomingSpeed = -200;
 
+int majorminor_down = 30;
+int majorminor_up = 0;
+//int majorminor_angle = 45;
+int mute_down = 35; //this needs to be determined
+int mute_up = 60; //this needs to be determined 
+
+int strumPosLeft = 10;
+int strumPosRight = 1800;
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() { 
   Serial.begin(9600);  
@@ -34,11 +39,13 @@ void setup() {
   pinMode(frethome,INPUT_PULLUP);
   majorminor.attach(11);  //attaches majorminor servo to pin 11 
   muting.attach(4);
-  servosUp();
+  servosChangingFrets();
   fretting.setMaxSpeed(1000000.0); //set arbitrarily high max speed, in units of [pulses/sec] (max reliable is about 4000 according to accelstepper).Prevents speed from being limited by code, we will not use this
   strumming.setMaxSpeed(1000000.0);
-  delay(1000); 
-  //goHome();  
+  delay(1000);
+  
+  goHome(fret_strokelengthmm, fret_mmPerStep, fretting, frethome, fretHomingSpeed);
+  goHome(strum_strokelengthmm, strum_mmPerStep, strumming, strumhome, strumHomingSpeed);
 }
 //-------------------------------------END SETUP------------------------------------------------------------------
 
@@ -46,7 +53,13 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop(){ //here is where we will call all our functions
-//  trapmotion(100,2);
+  servosUp();
+  strum(500, strumPosRight);
+  strum(500, strumPosLeft);
+  moveFretter(1000);
+  strum(500, strumPosRight);
+  strum(500, strumPosLeft);
+  moveFretter(1500);
 }
 
 //------------------------------------END VOID LOOP---------------------------------------------------------------
@@ -92,6 +105,18 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
     }
 }
 
+void strum(int strumSpeed, int position){
+  strumming.setSpeed(strumSpeed);
+  strumming.setAcceleration(4000);
+  strumming.runToNewPosition(position);
+}
+
+void moveFretter(int position){
+  fretting.setSpeed(500);
+  fretting.setAcceleration(4000);
+  fretting.runToNewPosition(position);
+  
+}
 
 void gotoPositionAtSpeedsteps(AccelStepper stepper, long mmPerStep, long posmm, float sped, float accel){ //function to tell the stepper to go to a position at a specific speed with speed in units of steps/s
     long numSteps=ceil(posmm/mmPerStep);
@@ -119,10 +144,9 @@ void trianglemotion (long posmm, long mmPerStep, float t, AccelStepper stepper){
   while(stepper.currentPosition()!=stepper.targetPosition()){ //while not at the target position, execute steps
     stepper.run();
   }
-  
 }
 
-void trapmotion( long posmm, long mmPerStep, float t, AccelStepper stepper){     // this function uses a trapezoidal motion profile with equal times of acceleration, constant speed, and deceleration. from this link: 
+void trapmotion(long posmm, long mmPerStep, float t, AccelStepper stepper){     // this function uses a trapezoidal motion profile with equal times of acceleration, constant speed, and deceleration. from this link: 
   long targetsteps=floor(posmm/mmPerStep); //number of steps needed to get to abolute desired position
   float accel = (4.5*(stepper.currentPosition()-targetsteps))/pow(t,2);   //calc accel needed
   float v_max = (1.5*(stepper.currentPosition()-targetsteps))/t;       //calc max (target) velocity
@@ -138,7 +162,7 @@ void trapmotion( long posmm, long mmPerStep, float t, AccelStepper stepper){    
 
 
 //-----------------------------------------EXPERIMENTAL---------------------------------------------------------------
-/**/
+
 //---------------------------DEFUNCT----------------------
 //functions that likely are defunction but good to keep around in case we need to reference then later, can be added to a library of old stuff at some point to clean this up
 /*void gotoangle(int a){ //this is unneeded as servo.write goes to a position and does not need to worry about delay
