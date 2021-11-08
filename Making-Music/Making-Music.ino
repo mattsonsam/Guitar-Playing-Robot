@@ -33,26 +33,30 @@ int mute_up = 60; //this needs to be determined
 int strumPosLeft = 10;
 int strumPosRight = 1800;
 
+bool temp_majorMinorBool = false; //temp variable to store true false for major minor bool in for loop, just switches value each time
+int chord; // temp variable to store code in descending for loop
+
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
 
+int E=0; int EPos = 0;//all other positions are based off E to accomodate for any moves in the limit switch
+//no E sharp
+int F=40+E; int FPos =1;
+int Fs=62+E; int FsPos = 2;//the "s" in Fs stands for "sharp"
+int G=97+E; int GPos =3;
+int Gs=128+E; int GsPos = 4;
+int A=155+E; int APos = 5;
+int As=181+E; int AsPos = 6;
+int B=204+E; int BPos = 7;
+//no B sharp
+int C=226+E; int CPos = 8;
+int Cs=245+E; int CsPos = 9;
+int D=268+E; int DPos = 10;
+int Ds=289+E; int DsPos = 11;
 
-int E=0;
-int F=40;
-int Fs; //the "s" in Fs stands for "sharp"
-int G;
-int Gs;
-int A;
-int As;
-int B;
-int C;
-int Cs;
-int D;
-int Ds;
+int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds};
 
 int majorminor_time;
 int muting_time; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
-
-
 
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() { 
@@ -76,7 +80,7 @@ void setup() {
 
 void loop(){ //here is where we will call all our functions
 
-  gotochord(E, 5, false);
+  /*gotochord(E, 5, false);
   strum(700,strumPosRight);
   strum(700,strumPosLeft);
   muting.write(mute_down);
@@ -95,7 +99,21 @@ void loop(){ //here is where we will call all our functions
   strum(700,strumPosRight);
   strum(700,strumPosLeft);
   muting.write(mute_down);
-  delay(1000);
+  delay(1000);*/
+  
+  for(int i=0; i<=11; i++){
+    chord = chordMatrix[i];
+    gotochord(chord, 5, temp_majorMinorBool);
+    strum(700,strumPosRight);
+    strum(700,strumPosLeft);
+    if(temp_majorMinorBool == true){
+      temp_majorMinorBool = false;
+    } else {
+      temp_majorMinorBool = true;
+      i=i-1;
+    }
+    
+  }
   
 }
 
@@ -116,7 +134,6 @@ void servosChangingFrets(){
 }
 
 //---go home----
-//Written by Amanda: gohome funct, will need to pass values in when called, may not be worth it to reduce # of functions by 1 to instead pass in values
 void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limitSwitch, int homingSpeed){
   long strokelength=ceil(strokeLengthmm/mmPerStep); //calculates number of steps to traverse entire rail
   stepper.moveTo(strokelength);
