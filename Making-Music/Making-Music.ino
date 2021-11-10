@@ -63,7 +63,7 @@ int muting_time; //variables representing the time in seconds it takes for the s
 //the song needs to be input once as a string matrix and once as a numerical matrix
 int songMatrixNums[] = {A, E, G, D, F, C, D, E}; //do not include major minor here
 char *SongMatrixStrings[]= {"Am", "E", "G", "D", "F", "C", "Dm", "E"};
-int numOfNotes = sizeof(songMatrixNums);
+int numOfNotes = 7;//sizeof(songMatrixNums);
 int currentNote;
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() { 
@@ -88,8 +88,9 @@ void setup() {
 void loop(){ //here is where we will call all our functions
   
   for(int i = 0; i<numOfNotes; i++){
+     Serial.print(numOfNotes);
      currentNote = songMatrixNums[i];
-     gotochord(currentNote, i, 5);
+     gotochord(currentNote, i, 2);
      strum(700,strumPosRight);
      strum(700,strumPosLeft);
      delay(10);
@@ -189,6 +190,8 @@ void gotochord(long chordAsNum, int posInSongMatrixStrings, float t){ //posInSon
 bool majorMinorBoolean(int currentNotePos){ //returns if the note currently about to be played is major or minor (ex d would return true, dm would return false)
   bool majorMinorBoolValue;
   String currentNote = SongMatrixStrings[currentNotePos];
+  Serial.print("Current Note: ");
+  Serial.println(currentNote);
   int noteNameLength = currentNote.length(); //store the length(# of characters) in the note name so we can check if the last letter is m for minor, noteNameLength=noteName.length();
   char noteNameLastLetter = currentNote.charAt(noteNameLength); //store the last letter of the note name with noteName.charAt(noteNameLength); use if(noteNameLastLetter == 'm') for major minor
   
