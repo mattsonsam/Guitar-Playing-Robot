@@ -30,8 +30,8 @@ int majorminor_up = 0;
 int mute_down = 35; //this needs to be determined
 int mute_up = 60; //this needs to be determined 
 
-int strumPosLeft = 10;
-int strumPosRight = 1800;
+int strumPosLeft = 150;
+int strumPosRight = 1680;
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -61,9 +61,16 @@ int muting_time; //variables representing the time in seconds it takes for the s
 
 //-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
 //the song needs to be input once as a string matrix and once as a numerical matrix
+/*//HOTEL CALIFORNIA CHORD PROGRESSION
 int songMatrixNums[] = {A, E, G, D, F, C, D, E}; //do not include major minor here
 char *SongMatrixStrings[]= {"Am", "E", "G", "D", "F", "C", "Dm", "E"};
 int numOfNotes = 7;//sizeof(songMatrixNums);
+*/
+//I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
+int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
+char *SongMatrixStrings[]= {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
+int numOfNotes = 34;//sizeof(songMatrixNums);
+
 int currentNote;
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() { 
@@ -90,9 +97,10 @@ void loop(){ //here is where we will call all our functions
   for(int i = 0; i<numOfNotes; i++){
      Serial.print(numOfNotes);
      currentNote = songMatrixNums[i];
-     gotochord(currentNote, i, 2);
-     strum(700,strumPosRight);
-     strum(700,strumPosLeft);
+     gotochord(currentNote, i, 0.2);
+     strum(3000,strumPosRight);
+     delay(10);
+     strum(3000,strumPosLeft);
      delay(10);
   }
 
@@ -163,7 +171,7 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
 
 void strum(int strumSpeed, int position){
   strumming.setSpeed(strumSpeed);
-  strumming.setAcceleration(4000);
+  strumming.setAcceleration(8000);
   strumming.runToNewPosition(position);
 }
 
