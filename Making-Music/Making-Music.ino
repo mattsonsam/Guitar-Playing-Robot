@@ -97,7 +97,7 @@ void loop(){ //here is where we will call all our functions
   for(int i = 0; i<numOfNotes; i++){
      Serial.print(numOfNotes);
      currentNote = songMatrixNums[i];
-     gotochord(currentNote, i, 0.2);
+     gotochord(currentNote, i, 0.2, );
      strum(3000,strumPosRight);
      delay(10);
      strum(3000,strumPosLeft);
@@ -169,15 +169,21 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
   delay(1000);
 }
 
-void strum(int strumSpeed, int position){
+void strum(int strumSpeed, int position/*, double timeToStrum*/){
+  //double startTime;
+  //double timeLeft;
   strumming.setSpeed(strumSpeed);
   strumming.setAcceleration(8000);
   strumming.runToNewPosition(position);
 }
 
 
-void gotochord(long chordAsNum, int posInSongMatrixStrings, float t){ //posInSongMatrixStrings will be the counter in a for loop
+void gotochord(long chordAsNum, int posInSongMatrixStrings, float t, double timeBetweenStrums){ //posInSongMatrixStrings will be the counter in a for loop
+  serial.print("Going from chord "); serial.print(SongMatrixStrings[posInSongMatrixStrings-1]); serial.print(" to "); serial.println(SongMatrixStrings[posInSongMatrixStrings]);
   servosChangingFrets();
+  double startTime;
+  double completionTime;
+  startTime = millis();
   bool major = majorMinorBoolean(posInSongMatrixStrings);
   long targetsteps=floor(chordAsNum/fret_mmPerStep); 
   float accel = (4.5*(fretting.currentPosition()-targetsteps))/pow(t,2);   
@@ -191,6 +197,13 @@ void gotochord(long chordAsNum, int posInSongMatrixStrings, float t){ //posInSon
   muting.write(mute_up);
   if(major==true){
     majorminor.write(majorminor_down);
+  }
+  completionTime = millis() - startTime;
+  if(completionTime < timeBetweenStrums){
+    delay(timeBetweenStrums - completionTime);
+  }
+  if(completionTime > timeBetweenStrums){
+    serial.print("Took too much time to reach needed fret at acceleration: "); serial.print(accel); serial.print(" and velocity"); serial.println(v_max);
   }
 }
 
