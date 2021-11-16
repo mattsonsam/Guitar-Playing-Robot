@@ -9,7 +9,7 @@ Servo muting;
 Servo majorminor;
 
 int frethome = 3; //pin for limit switch for fretter
-int strumhome = 14; //pin for limit switch for strummer
+int strumhome = 18; //pin for limit switch for strummer
 
 long fret_strokelengthmm = 400; //the length of the entire fretting linear rail
 double fret_step_per_rev = 800; // steps per revolution of stepper
@@ -17,7 +17,7 @@ double fret_mm_per_rev = 72; //linear distance travelled in one rotation of step
 double fret_mmPerStep = fret_mm_per_rev / fret_step_per_rev; //linear distance travelled in one step of the stepper
 
 long strum_strokelengthmm; //these need to be determined
-double strum_step_per_rev;
+double strum_step_per_rev=200;
 double strum_mm_per_rev;
 double strum_mmPerStep = strum_mm_per_rev / strum_step_per_rev;
 
@@ -168,6 +168,7 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
   while (digitalRead(limitSwitch) == 0) {
     stepper.setSpeed(homingSpeed);
     stepper.run();
+    Serial.println(stepper.currentPosition());
   }
   stepper.setCurrentPosition(0); //once home, set position to zero for reference
   delay(1000);
