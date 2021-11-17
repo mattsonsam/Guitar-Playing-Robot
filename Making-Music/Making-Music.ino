@@ -102,9 +102,9 @@ void loop() { //here is where we will call all our functions
   for (int i = 0; i < numOfNotes; i++) {
     currentNote = songMatrixNums[i];
     gotochord(currentNote, i, timeBtwnStrums);
-    strum(timeToStrum, strumPosRight);
+    strum(timeToStrum, strumPosRight/4);
     delay(10);
-    strum(timeToStrum, strumPosLeft);
+    strum(timeToStrum, strumPosLeft/4);
     delay(10);
   }
 
@@ -168,7 +168,7 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
   while (digitalRead(limitSwitch) == 0) {
     stepper.setSpeed(homingSpeed);
     stepper.run();
-    Serial.println(stepper.currentPosition());
+    //Serial.println(stepper.currentPosition());
   }
   stepper.setCurrentPosition(0); //once home, set position to zero for reference
   delay(1000);
