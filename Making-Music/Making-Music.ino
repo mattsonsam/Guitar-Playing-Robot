@@ -12,16 +12,16 @@ int frethome = 3; //pin for limit switch for fretter
 int strumhome = 18; //pin for limit switch for strummer
 
 long fret_strokelengthmm = 400; //the length of the entire fretting linear rail
-double fret_step_per_rev = 800; // steps per revolution of stepper
+double fret_step_per_rev = 200; // steps per revolution of stepper
 double fret_mm_per_rev = 72; //linear distance travelled in one rotation of stepper
 double fret_mmPerStep = fret_mm_per_rev / fret_step_per_rev; //linear distance travelled in one step of the stepper
 
 long strum_strokelengthmm; //these need to be determined
 double strum_step_per_rev=200;
-double strum_mm_per_rev;
+double strum_mm_per_rev=72;
 double strum_mmPerStep = strum_mm_per_rev / strum_step_per_rev;
 
-int fretHomingSpeed = -500;
+int fretHomingSpeed = -200;
 int strumHomingSpeed = -200;
 
 int majorminor_down = 30;
@@ -30,12 +30,13 @@ int majorminor_up = 0;
 int mute_down = 35; //this needs to be determined
 int mute_up = 60; //this needs to be determined
 
-int strumPosLeft = 150;
-int strumPosRight = 1680;
+int strumPosLeft = 5;
+int strumPosRight = 65;
 int strumTraversalDistance = strumPosRight - strumPosLeft; //1530 steps for 150 and 1680
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
+
 
 
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
@@ -62,14 +63,12 @@ int muting_time; //variables representing the time in seconds it takes for the s
 
 //-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
 //the song needs to be input once as a string matrix and once as a numerical matrix
-/*//HOTEL CALIFORNIA CHORD PROGRESSION
-  int songMatrixNums[] = {A, E, G, D, F, C, D, E}; //do not include major minor here
-  char *SongMatrixStrings[]= {"Am", "E", "G", "D", "F", "C", "Dm", "E"};
-  int numOfNotes = 7;//sizeof(songMatrixNums);
-*/
+
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
 int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
 char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
+
+int tempo=100; //tempo of song in BPM
 
 int numOfNotes = 34;//sizeof(songMatrixNums);
 
@@ -101,48 +100,17 @@ void loop() { //here is where we will call all our functions
 
   for (int i = 0; i < numOfNotes; i++) {
     currentNote = songMatrixNums[i];
-    gotochord(currentNote, i, timeBtwnStrums);
-    strum(timeToStrum, strumPosRight/4);
+    gotochord(currentNote, i,2);
     delay(10);
-    strum(timeToStrum, strumPosLeft/4);
-    delay(10);
+    strum(1, 100);
+    delay(100);
+    strum(1, 0);
+    
   }
+  
+  
 
-  /*gotochord(E, 5, false); //this wont work anymore bc i changed how gotochord works - amanda
-    strum(700,strumPosRight);
-    strum(700,strumPosLeft);
-    muting.write(mute_down);
-    delay(1000);
-    gotochord(E, 5, true);
-    strum(700,strumPosRight);
-    strum(700,strumPosLeft);
-    muting.write(mute_down);
-    delay(1000);
-    gotochord(F, 5, false);
-    strum(700,strumPosRight);
-    strum(700,strumPosLeft);
-    muting.write(mute_down);
-    delay(1000);
-    gotochord(F, 5, true);
-    strum(700,strumPosRight);
-    strum(700,strumPosLeft);
-    muting.write(mute_down);
-    delay(1000);
-
-    for(int i=0; i<=11; i++){ //for loop to loop through all notes, just for testing, not needed to keep
-    chord = chordMatrix[i];
-    gotochord(chord, 5, temp_majorMinorBool);
-    strum(700,strumPosRight);
-    strum(700,strumPosLeft);
-    if(temp_majorMinorBool == true){
-      temp_majorMinorBool = false;
-    } else {
-      temp_majorMinorBool = true;
-      i=i-1;
-    }
-
-    } */
-
+  
 }
 
 //------------------------------------END VOID LOOP---------------------------------------------------------------
@@ -174,33 +142,23 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
   delay(1000);
 }
 
-void strum(int strumTime, int position) {
-  //double startTime;
-  //double timeLeft;
-  int strumSpeed = strumTraversalDistance/strumTime;
+void strum(float strumTime, int positionmm) {
+  long target=floor(positionmm/strum_mmPerStep);
+  float strumSpeed= target/strumTime;
   
   strumming.setSpeed(strumSpeed);
   strumming.setAcceleration(10000);
-  strumming.runToNewPosition(position);
+  strumming.runToNewPosition(target);
 }
 
 
-void gotochord(long chordAsNum, int posInSongMatrixStrings, float timeBtwnStrumsSec) { //posInSongMatrixStrings will be the counter in a for loop
-  if (posInSongMatrixStrings == 0) {
-    Serial.print("Going from home"); Serial.print(" to "); Serial.println(SongMatrixStrings[posInSongMatrixStrings]);
-  } else {
-    Serial.print("Going from chord "); Serial.print(SongMatrixStrings[posInSongMatrixStrings - 1]); Serial.print(" to "); Serial.println(SongMatrixStrings[posInSongMatrixStrings]);
-  }
+void gotochord(long chordAsNum, int posInSongMatrixStrings,int t) { //posInSongMatrixStrings will be the counter in a for loop
   
   servosChangingFrets();
-  float timeBetweenStrumsMillis = timeBtwnStrumsSec / 1000;
-  double startTime;
-  double completionTime;
-  startTime = millis();
   bool major = majorMinorBoolean(posInSongMatrixStrings);
   long targetsteps = floor(chordAsNum / fret_mmPerStep);
-  float accel = (4.5 * (fretting.currentPosition() - targetsteps)) / pow(timeToStrum, 2);
-  float v_max = (1.5 * (fretting.currentPosition() - targetsteps)) / timeToStrum;
+  float accel = (4.5 * (fretting.currentPosition() - targetsteps)) / pow(t, 2);
+  float v_max = (1.5 * (fretting.currentPosition() - targetsteps)) / t;
   fretting.setSpeed(v_max);
   fretting.setAcceleration(accel);
   fretting.moveTo(targetsteps);
@@ -211,22 +169,14 @@ void gotochord(long chordAsNum, int posInSongMatrixStrings, float timeBtwnStrums
   if (major == true) {
     majorminor.write(majorminor_down);
   }
-  completionTime = millis() - startTime;
-  if (completionTime < timeBetweenStrumsMillis) {
-    delay(timeBetweenStrumsMillis - completionTime);
-  }
-  if (completionTime > timeBetweenStrumsMillis) {
-    Serial.print("Took too much time to reach needed fret at acceleration: "); Serial.print(accel); Serial.print(" and velocity"); Serial.println(v_max);
-    Serial.print("Over by "); Serial.print(timeBetweenStrumsMillis - completionTime); Serial.println(" milliseconds");
-  }
 }
 
 
 bool majorMinorBoolean(int currentNotePos) { //returns if the note currently about to be played is major or minor (ex d would return true, dm would return false)
   bool majorMinorBoolValue;
   String currentNote = SongMatrixStrings[currentNotePos];
-  Serial.print("Current Note: ");
-  Serial.println(currentNote);
+  //Serial.print("Current Note: ");
+  //Serial.println(currentNote);
   int noteNameLength = currentNote.length(); //store the length(# of characters) in the note name so we can check if the last letter is m for minor, noteNameLength=noteName.length();
   char noteNameLastLetter = currentNote.charAt(noteNameLength); //store the last letter of the note name with noteName.charAt(noteNameLength); use if(noteNameLastLetter == 'm') for major minor
 
@@ -239,10 +189,7 @@ bool majorMinorBoolean(int currentNotePos) { //returns if the note currently abo
 }
 
 
-void hotelcalifornia() { //hard code hotel california chord progression
 
-
-}
 //-----------------------------------------END FUNCTIONS--------------------------------------------------------------
 
 
