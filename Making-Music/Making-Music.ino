@@ -153,7 +153,7 @@ void strum(float strumTime, int positionmm) {
 
 
 void gotochord(long chordAsNum, int posInSongMatrixStrings,int t) { //posInSongMatrixStrings will be the counter in a for loop
-  
+  double startTime = millis();
   servosChangingFrets();
   bool major = majorMinorBoolean(posInSongMatrixStrings);
   long targetsteps = floor(chordAsNum / fret_mmPerStep);
@@ -169,6 +169,7 @@ void gotochord(long chordAsNum, int posInSongMatrixStrings,int t) { //posInSongM
   if (major == true) {
     majorminor.write(majorminor_down);
   }
+  double completionTime = millis()-startTime;
 }
 
 
