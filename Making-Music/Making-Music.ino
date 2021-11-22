@@ -30,13 +30,13 @@ int majorminor_up = 0;
 int mute_down = 35; //this needs to be determined
 int mute_up = 60; //this needs to be determined
 
-int strumPosLeft = 5;
-int strumPosRight = 80;
+int strumPosLeft = 0;
+int strumPosRight = 81;
 int strumTraversalDistance = strumPosRight - strumPosLeft; //1530 steps for 150 and 1680
 
-int servosChangingFretsTime; 
-int majorminor_time;
-int muting_time; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
+double servosChangingFretsTime=0.5;   
+double majorminor_time=0.4;
+int muting_time= 0.4; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -55,7 +55,7 @@ int A = 155 + E; int APos = 5;
 int As = 181 + E; int AsPos = 6;
 int B = 204 + E; int BPos = 7;
 //no B sharp
-int C = 226 + E; int CPos = 8;
+int C = 226 + E; int CPos = 8;    
 int Cs = 245 + E; int CsPos = 9;
 int D = 268 + E; int DPos = 10;
 int Ds = 289 + E; int DsPos = 11;
@@ -71,7 +71,7 @@ int cant_help_falling[]= {C,E,A,F,C,G,F,G,A,F,C,G,C,C,E,A,F,C,G,F,G,A,F,C,G,C};
 int cant_help_falling_majorminor[]={1,0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,0,1,1,1,1};
 int cant_help_falling_timing[]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
 
-//String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
+/*String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
 
 /*int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
 char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
@@ -107,12 +107,9 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
-//playsong(cant_help_falling,cant_help_falling_majorminor);
-  int starttime=millis();
-  muting.write(mute_up);
-  int endtime=millis();
-  Serial.println(endtime-starttime);
-  delay(10000); 
+playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,1,3);
+
+ 
   
   
 
@@ -158,7 +155,7 @@ void strum(float strumTime, int positionmm) {
 }
 
 
-void gotochord(int arrayposition, int chordAsNum, bool major,int t) { //posInSongMatrixStrings will be the counter in a for loop
+void gotochord(int chordAsNum, bool major,double t) { //posInSongMatrixStrings will be the counter in a for loop
   servosChangingFrets();
   bool is_major=major;
   //bool major = majorMinorBoolean(arrayposition, major_minor_array);
@@ -175,17 +172,60 @@ void gotochord(int arrayposition, int chordAsNum, bool major,int t) { //posInSon
   if (is_major == true) {
     majorminor.write(majorminor_down);
   }
+  muting.write(mute_up);
 }
 
-void playsong(int songchords[], int song_majorminor[]){ /* int songtiming, int tempo, int time_sig_numerator, int time_sig_denominator*/
+void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator){
+  //---------------------calculate constants and stuff---------------//
+  double strum_time=0.75; //time to make strummer move across the strings in seconds
+  double BPS=tempo/60;  //beats per second
+  double SPB=1/BPS; //seconds per beat
+  double secs_per_measure= time_sig_numerator*SPB; //multiplies the time of each beat by the number of beats in a measure
+  int num_chords = sizeof(songchords);
+  double transition_ratio=0.5; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
+  double transition_time;
 //---------------------preparing to play--------------------//
   servosChangingFrets();
   delay(1000);
-  strum(1,strumPosLeft);
+  strum(0.5,strumPosRight);
   delay(1000);
-  gotochord(0,songchords[0],false,3);
+  bool first_state=false;
+  if(song_majorminor[0]==1){
+    first_state=true;
+  }
+  gotochord(songchords[0],first_state,1);
 //----------------------begin playing---------------------//
-  
+  for(int i=0; i<=25; i++){ ////*************************** not sure if num_chords is working
+    Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
+    
+
+      
+      int next_chord=songchords[i+1];
+      bool next_chord_state=false; //false=minor, true =major
+      int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
+      double current_chord_time= current_num_measures*secs_per_measure; //seconds that current chord takes up
+      if(song_majorminor[i+1]==1){
+        next_chord_state=true;
+      }
+      double time_let_ring=(1-transition_ratio)*current_chord_time; //time to let the current chord be played for
+
+      if(next_chord_state=true){
+        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time+majorminor_time);
+      }
+      if(next_chord_state=false){
+        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time);
+      }
+     
+
+      strum(strum_time,strumPosLeft);
+      strum(strum_time,strumPosRight);
+      //Serial.println("Strumming");
+
+      delay((time_let_ring-(strum_time*2))*1000); //let the chord ring out
+
+      gotochord(next_chord,next_chord_state,transition_time);
+    
+  }
 }
 
 
