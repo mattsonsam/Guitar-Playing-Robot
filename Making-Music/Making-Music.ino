@@ -31,8 +31,12 @@ int mute_down = 35; //this needs to be determined
 int mute_up = 60; //this needs to be determined
 
 int strumPosLeft = 5;
-int strumPosRight = 65;
+int strumPosRight = 80;
 int strumTraversalDistance = strumPosRight - strumPosLeft; //1530 steps for 150 and 1680
+
+int servosChangingFretsTime; 
+int majorminor_time;
+int muting_time; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -58,17 +62,23 @@ int Ds = 289 + E; int DsPos = 11;
 
 int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
 
-int majorminor_time;
-int muting_time; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
 
 //-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
 //the song needs to be input once as a string matrix and once as a numerical matrix
 
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
-int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
+int cant_help_falling[]= {C,E,A,F,C,G,F,G,A,F,C,G,C,C,E,A,F,C,G,F,G,A,F,C,G,C};
+int cant_help_falling_majorminor[]={1,0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,0,1,1,1,1};
+int cant_help_falling_timing[]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
+
+//String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
+
+/*int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
 char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
+int measures[]={1,2,3,5,6,7,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33};*/
 
 int tempo=100; //tempo of song in BPM
+int time_signature;
 
 int numOfNotes = 34;//sizeof(songMatrixNums);
 
@@ -97,16 +107,12 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
-
-  for (int i = 0; i < numOfNotes; i++) {
-    currentNote = songMatrixNums[i];
-    gotochord(currentNote, i,2);
-    delay(10);
-    strum(1, 100);
-    delay(100);
-    strum(1, 0);
-    
-  }
+//playsong(cant_help_falling,cant_help_falling_majorminor);
+  int starttime=millis();
+  muting.write(mute_up);
+  int endtime=millis();
+  Serial.println(endtime-starttime);
+  delay(10000); 
   
   
 
@@ -152,10 +158,10 @@ void strum(float strumTime, int positionmm) {
 }
 
 
-void gotochord(long chordAsNum, int posInSongMatrixStrings,int t) { //posInSongMatrixStrings will be the counter in a for loop
-  double startTime = millis();
+void gotochord(int arrayposition, int chordAsNum, bool major,int t) { //posInSongMatrixStrings will be the counter in a for loop
   servosChangingFrets();
-  bool major = majorMinorBoolean(posInSongMatrixStrings);
+  bool is_major=major;
+  //bool major = majorMinorBoolean(arrayposition, major_minor_array);
   long targetsteps = floor(chordAsNum / fret_mmPerStep);
   float accel = (4.5 * (fretting.currentPosition() - targetsteps)) / pow(t, 2);
   float v_max = (1.5 * (fretting.currentPosition() - targetsteps)) / t;
@@ -166,18 +172,26 @@ void gotochord(long chordAsNum, int posInSongMatrixStrings,int t) { //posInSongM
     fretting.run();
   }
   muting.write(mute_up);
-  if (major == true) {
+  if (is_major == true) {
     majorminor.write(majorminor_down);
   }
-  double completionTime = millis()-startTime;
+}
+
+void playsong(int songchords[], int song_majorminor[]){ /* int songtiming, int tempo, int time_sig_numerator, int time_sig_denominator*/
+//---------------------preparing to play--------------------//
+  servosChangingFrets();
+  delay(1000);
+  strum(1,strumPosLeft);
+  delay(1000);
+  gotochord(0,songchords[0],false,3);
+//----------------------begin playing---------------------//
+  
 }
 
 
-bool majorMinorBoolean(int currentNotePos) { //returns if the note currently about to be played is major or minor (ex d would return true, dm would return false)
+/*bool majorMinorBoolean(int currentNotePos,String major_minor_array) { //returns if the note currently about to be played is major or minor (ex d would return true, dm would return false)
   bool majorMinorBoolValue;
-  String currentNote = SongMatrixStrings[currentNotePos];
-  //Serial.print("Current Note: ");
-  //Serial.println(currentNote);
+  String currentNote = major_minor_array[currentNotePos];
   int noteNameLength = currentNote.length(); //store the length(# of characters) in the note name so we can check if the last letter is m for minor, noteNameLength=noteName.length();
   char noteNameLastLetter = currentNote.charAt(noteNameLength); //store the last letter of the note name with noteName.charAt(noteNameLength); use if(noteNameLastLetter == 'm') for major minor
 
@@ -187,7 +201,7 @@ bool majorMinorBoolean(int currentNotePos) { //returns if the note currently abo
     majorMinorBoolValue = true;
   }
   return (majorMinorBoolValue);
-}
+}*/
 
 
 
