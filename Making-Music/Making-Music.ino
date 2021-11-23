@@ -31,7 +31,8 @@ int mute_down = 35; //this needs to be determined
 int mute_up = 60; //this needs to be determined
 
 int strumPosLeft = 0;
-int strumPosRight = 81;
+int strumPosRight = 83;
+int strum_mid = (strumPosRight+strumPosLeft)/2;
 int strumTraversalDistance = strumPosRight - strumPosLeft; //1530 steps for 150 and 1680
 
 double servosChangingFretsTime=0.5;   
@@ -67,9 +68,10 @@ int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all c
 //the song needs to be input once as a string matrix and once as a numerical matrix
 
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
-int cant_help_falling[]= {C,E,A,F,C,G,F,G,A,F,C,G,C,C,E,A,F,C,G,F,G,A,F,C,G,C};
-int cant_help_falling_majorminor[]={1,0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,0,1,1,1,1};
-int cant_help_falling_timing[]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
+int cant_help_falling[100]= {C,E,A,F,C,G,F,G,A,F,C,G,C,C,E,A,F,C,G,F,G,A,F,C,G,C};
+int cant_help_falling_majorminor[100]={1,0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,0,1,1,1,1};
+int cant_help_falling_timing[100]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
+const int cant_help_falling_numchords= sizeof(cant_help_falling)/sizeof(cant_help_falling[0]);
 
 /*String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
 
@@ -107,7 +109,7 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
-playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,1,3);
+playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
 
  
   
@@ -175,15 +177,15 @@ void gotochord(int chordAsNum, bool major,double t) { //posInSongMatrixStrings w
   muting.write(mute_up);
 }
 
-void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator){
+void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords){
   //---------------------calculate constants and stuff---------------//
   double strum_time=0.75; //time to make strummer move across the strings in seconds
   double BPS=tempo/60;  //beats per second
   double SPB=1/BPS; //seconds per beat
   double secs_per_measure= time_sig_numerator*SPB; //multiplies the time of each beat by the number of beats in a measure
-  int num_chords = sizeof(songchords);
-  double transition_ratio=0.5; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
+  double transition_ratio=0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   double transition_time;
+  int last_chord;
 //---------------------preparing to play--------------------//
   servosChangingFrets();
   delay(1000);
@@ -195,7 +197,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   }
   gotochord(songchords[0],first_state,1);
 //----------------------begin playing---------------------//
-  for(int i=0; i<=25; i++){ ////*************************** not sure if num_chords is working
+  for(int i=0; i<numchords; i++){ ////*************************** not sure if num_chords is working
     Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
     
 
@@ -209,22 +211,35 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       }
       double time_let_ring=(1-transition_ratio)*current_chord_time; //time to let the current chord be played for
 
-      if(next_chord_state=true){
+      /*if(next_chord_state=true){
         transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time+majorminor_time);
       }
       if(next_chord_state=false){
         transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time);
-      }
+      }*/
+      transition_time=(current_chord_time*transition_ratio);
      
 
-      strum(strum_time,strumPosLeft);
-      strum(strum_time,strumPosRight);
-      //Serial.println("Strumming");
+      if((i%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+        strum(strum_time, strumPosLeft);
+      }
+      if((i%2!=0)&&(strumming.currentPosition()<strum_mid)){
+        strum(strum_time,strumPosRight);
+      }
+      
 
-      delay((time_let_ring-(strum_time*2))*1000); //let the chord ring out
+      delay((time_let_ring-(strum_time))*1000); //let the chord ring out
 
       gotochord(next_chord,next_chord_state,transition_time);
+
+      last_chord=i+1;
     
+  }
+  if((last_chord%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+    strum(strum_time, strumPosLeft);
+  }
+  if((last_chord%2!=0)&&(strumming.currentPosition()<strum_mid)){
+    strum(strum_time,strumPosRight);
   }
 }
 
@@ -246,72 +261,3 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
 
 //-----------------------------------------END FUNCTIONS--------------------------------------------------------------
-
-
-//-----------------------------------------EXPERIMENTAL---------------------------------------------------------------
-
-//---------------------------DEFUNCT/NOT IN USE----------------------
-//functions that likely are defunction but good to keep around in case we need to reference then later, can be added to a library of old stuff at some point to clean this up
-/*
-  //---motion math---
-  void trianglemotion (long posmm, long mmPerStep, float t, AccelStepper stepper){ //plans and executes the triangular motion profile to get the carriage to the desired position in the desired amount of time, limited by the max velocity of 4000 steps/s
-  long targetsteps=floor(posmm/mmPerStep); //number of steps needed to get to abolute desired position
-  float v_avg= abs((stepper.currentPosition()-targetsteps)/t); //avg speed to get to desired position from current position
-  float v_max= 2*v_avg; //max velocity assuming equal time accelerating and decelerating
-  float accel = (2*v_max)/t; //necessaey accel to get to v_max at time t/2
-  //Serial.println(v_max);
-  stepper.setSpeed(v_max); //set the target speed of travel
-  stepper.setAcceleration(accel); //set the necessary accel/decel
-  stepper.moveTo(targetsteps); //assign target location
-  while(stepper.currentPosition()!=stepper.targetPosition()){ //while not at the target position, execute steps
-    stepper.run();
-  }
-  }
-
-  void trapmotion(long posmm, long mmPerStep, float t, AccelStepper stepper){     // this function uses a trapezoidal motion profile with equal times of acceleration, constant speed, and deceleration. from this link:
-  long targetsteps=floor(posmm/mmPerStep); //number of steps needed to get to abolute desired position
-  float accel = (4.5*(stepper.currentPosition()-targetsteps))/pow(t,2);   //calc accel needed
-  float v_max = (1.5*(stepper.currentPosition()-targetsteps))/t;       //calc max (target) velocity
-  stepper.setSpeed(v_max);                 // set motion parameters
-  stepper.setAcceleration(accel);
-  stepper.moveTo(targetsteps);
-  while(stepper.currentPosition()!=stepper.targetPosition()){ //while not at the target position, execute steps
-    stepper.run();
-  }
-  }
-
-  void moveFretter(int position){
-  fretting.setSpeed(500);
-  fretting.setAcceleration(4000);
-  fretting.runToNewPosition(position);
-
-  }
-
-  //---go to position----
-  void gotoPositionAtSpeed(AccelStepper stepper, long posmm, long mmPerStep, float spedmm, float accelmm){ //function to tell the stepper to go to a  position at a specific speed with speed in units of mm/s
-    long numSteps=ceil(posmm/mmPerStep);
-    float Speed=spedmm/mmPerStep;
-    float acceleration=accelmm/mmPerStep;
-    stepper.setSpeed(Speed);
-    stepper.setAcceleration(acceleration);
-    stepper.moveTo(numSteps);
-    while(stepper.currentPosition()!=stepper.targetPosition()){
-      stepper.run();
-      //Serial.println(stepper.currentPosition());
-    }
-  }
-
-
-  void gotoPositionAtSpeedsteps(AccelStepper stepper, long mmPerStep, long posmm, float sped, float accel){ //function to tell the stepper to go to a position at a specific speed with speed in units of steps/s
-    long numSteps=ceil(posmm/mmPerStep);
-    //float Speed=spedmm/mmPerStep;
-    //float acceleration=accelmm/mmPerStep;
-    stepper.setSpeed(sped);
-    stepper.setAcceleration(accel);
-    stepper.moveTo(numSteps);
-    while(stepper.currentPosition()!=stepper.targetPosition()){
-      stepper.run();
-      //Serial.println(stepper.currentPosition());
-    }
-  }
-*/
