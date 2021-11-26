@@ -48,7 +48,7 @@ int muting_time= 0.4; //variables representing the time in seconds it takes for 
 
 int E = 0; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
 //no E sharp
-int F = 40 + E; int FPos = 1;
+int F = 38 + E; int FPos = 1;
 int Fs = 62 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
 int G = 97 + E; int GPos = 3;
 int Gs = 128 + E; int GsPos = 4;
@@ -70,24 +70,21 @@ int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all c
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
 int cant_help_falling[100]= {C,E,A,F,C,G,F,G,A,F,C,G,C,C,E,A,F,C,G,F,G,A,F,C,G,C};
 int cant_help_falling_majorminor[100]={1,0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,0,1,1,1,1};
-int cant_help_falling_timing[100]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
+//int cant_help_falling_timing[100]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
+int cant_help_falling_timing[100]={1,1,2,1,1,2,1,1,1,1,1,1,2,1,1,2,1,1,2,1,1,1,1,1,1,1};
 const int cant_help_falling_numchords= sizeof(cant_help_falling)/sizeof(cant_help_falling[0]);
 
+int hotelcalifornia[100]={B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,G,D,Fs,B,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,G,D,Fs,B,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs};
+int hotelcalifornia_majorminor[100]={0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1};
+int hotelcalifornia_timing[100]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}; //now, each element in the array represents how many measures the given chord lasts for, rather than the number of the measure at which its struck
+const int hotelcalifornia_numchords= sizeof(hotelcalifornia)/(sizeof(hotelcalifornia[0]));
 /*String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
 
 /*int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
 char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
 int measures[]={1,2,3,5,6,7,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33};*/
 
-int tempo=100; //tempo of song in BPM
-int time_signature;
 
-int numOfNotes = 34;//sizeof(songMatrixNums);
-
-int timeToStrum = 0.5;
-float timeBtwnStrums = 0.5; //time between strums in seconds
-
-int currentNote;
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(9600);
@@ -109,9 +106,9 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
-playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
+//playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
 
- 
+ playsong(hotelcalifornia,hotelcalifornia_majorminor,hotelcalifornia_timing, 74, 4,hotelcalifornia_numchords);
   
   
 
@@ -204,7 +201,8 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       
       int next_chord=songchords[i+1];
       bool next_chord_state=false; //false=minor, true =major
-      int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
+      //int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
+      int current_num_measures=songtiming[i];
       double current_chord_time= current_num_measures*secs_per_measure; //seconds that current chord takes up
       if(song_majorminor[i+1]==1){
         next_chord_state=true;
