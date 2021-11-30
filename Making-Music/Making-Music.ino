@@ -113,7 +113,7 @@ void setup() {
 void loop() { //here is where we will call all our functions
   //playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
 
-  playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 100, 4, hotelcalifornia_numchords);
+  playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
 
 
 
@@ -185,10 +185,11 @@ void gotochord(int chordAsNum, bool major, double t) { //posInSongMatrixStrings 
 
 void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) {
   //---------------------calculate constants and stuff---------------//
-  double strum_time = 0.75; //time to make strummer move across the strings in seconds
   double BPS = tempo / 60; //beats per second
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
+  double strum_time = (.25*secs_per_measure);//0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
+  //not functioning, why?
   double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   int last_chord;
   bool firstChord_mmstate; //false = minor, true = major
@@ -212,9 +213,10 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
     int next_chord = songchords[i + 1]; //location of next chord in array
 
-    double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord takes up
-    double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for
-    double transition_time = (current_chord_time * transition_ratio);
+    double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord lasts for
+    double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for, 75% of time the current chord plays for
+    int time_let_ring_millis = time_let_ring * 1000;
+    double transition_time = (current_chord_time * transition_ratio); //time to let the chords change
 
     if (song_majorminor[i + 1] == 1) { //determine major minor servo position
       nextChord_mmstate = true;
@@ -223,19 +225,15 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     }
 
     unsigned int timeBeforeStrum = millis();
-    
-    int time_let_ring_millis = time_let_ring * 1000;
-    int timeToCompleteStrum = 700+strum_time;
+
+    int timeToCompleteStrum = 700 + (2*strum_time);
     int numStrumLoops = floor((time_let_ring_millis - 400) / timeToCompleteStrum); //400 is minimum ring out time
 
     for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
-      if (strumming.currentPosition() > strum_mid) { //strum once
-        strum(strum_time, strumPosLeft);
-        delay(350);
-      } else {
-        strum(strum_time, strumPosRight);
-        delay(350);
-      }
+      strum(strum_time, strumPosLeft);
+      delay(350);
+      strum(strum_time, strumPosRight);
+      delay(350);
     }
 
     unsigned int timeAfterStrum = millis();
