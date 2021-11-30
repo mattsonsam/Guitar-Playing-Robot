@@ -188,7 +188,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   double BPS = tempo / 60; //beats per second
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
-  double strum_time = (.25*secs_per_measure);//0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
+  double strum_time = 0.75; //(.25*secs_per_measure);//0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
   //not functioning, why?
   double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   int last_chord;
