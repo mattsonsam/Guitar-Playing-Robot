@@ -144,7 +144,7 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
- /* switch (rotationValue) { //use a switch statement to determine which song to display
+  switch (rotationValue) { //use a switch statement to determine which song to display
     case 1:
       lcd.clear();
       lcd.setCursor(0, 0);
@@ -201,9 +201,9 @@ void loop() { //here is where we will call all our functions
         lcd.setCursor(0, 0);
         lcd.print("Playing:");
         lcd.setCursor(0, 1);
-        lcd.print("Hotel California");*/
+        lcd.print("Hotel California");
         playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
-/*
+
         break;
       case 2:
         lcd.clear();
@@ -218,7 +218,7 @@ void loop() { //here is where we will call all our functions
         break;
     }
   }
-*/
+
 }
 
 //------------------------------------END VOID LOOP---------------------------------------------------------------
