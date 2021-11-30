@@ -1,109 +1,261 @@
+//-------------------------------------SETUP VARIABLES----------------------------------------------------------------------------------------------------
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 #include <Servo.h>
 
-AccelStepper stepper(1,54,55); //1 is a default setting, 54 is the pin connected to the "DIR+" or direction pin on the driver, 55 is the pin connected to "PUL+" or pulse pin
-Servo frettingservo; //initialize servo                    
-long strokelengthmm = 400; //long for maximum travel distance of fretting rail in mm. Accel stepper requires that inputs to movement functions is long (i think)
-double step_per_rev=800; //number of steps per revolution of motor, given by stepper driver. Stepper drive has small DIP switches to select this
-double mm_per_rev = 72; //Exerimentally determined number of mm traveled per revolution. This is used to convert from mm distances to number of steps.
-double mmPerStep = mm_per_rev/step_per_rev; //conversion factor
-int switch1 = 3; //signal pin for home limit switch (near headstock)
-int switch2 = 9; //signal pin for end stop limit switch (near body)
-int pos=45; //variable to set initial position of frettingservo upon startup, in degrees, of the fretting servo
-void setup() { //runs once upon power up
-  Serial.begin(9600);  
-  pinMode(switch1,INPUT_PULLUP); //define limit switch pins as inputs, with internal pullup resistors used on arduino. Makes it so that no external resistor is needed with switch
-  pinMode(switch2,INPUT_PULLUP);
-  frettingservo.attach(11);  //defines signal pin for servo
-  frettingservo.write(pos);  //move servo to angle defined by pos (intended to be not pressing string at first)
-  stepper.setMaxSpeed(1000000.0); //set arbitrarily high max speed, in units of [pulses/sec] (max reliable is about 4000 according to accelstepper)
-  delay(1000); //wait for things to finish moving
-  gohome(); //do homing routine (see below)
+AccelStepper strumming(1, 54, 55); //using x-step pins
+AccelStepper fretting(1, 60, 61); //using y-step pins
+Servo muting;
+Servo majorminor;
+
+int frethome = 3; //pin for limit switch for fretter
+int strumhome = 18; //pin for limit switch for strummer
+
+long fret_strokelengthmm = 400; //the length of the entire fretting linear rail
+double fret_step_per_rev = 200; // steps per revolution of stepper
+double fret_mm_per_rev = 72; //linear distance travelled in one rotation of stepper
+double fret_mmPerStep = fret_mm_per_rev / fret_step_per_rev; //linear distance travelled in one step of the stepper
+
+long strum_strokelengthmm; //these need to be determined
+double strum_step_per_rev=200;
+double strum_mm_per_rev=72;
+double strum_mmPerStep = strum_mm_per_rev / strum_step_per_rev;
+
+int fretHomingSpeed = -200;
+int strumHomingSpeed = -200;
+
+int majorminor_down = 30;
+int majorminor_up = 0;
+//int majorminor_angle = 45;
+int mute_down = 35; //this needs to be determined
+int mute_up = 60; //this needs to be determined
+
+int strumPosLeft = 0;
+int strumPosRight = 83;
+int strum_mid = (strumPosRight+strumPosLeft)/2;
+int strumTraversalDistance = strumPosRight - strumPosLeft; //1530 steps for 150 and 1680
+
+double servosChangingFretsTime=0.5;   
+double majorminor_time=0.4;
+int muting_time= 0.4; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
+
+
+//---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
+
+
+
+//-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
+
+int E = 0; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
+//no E sharp
+int F = 38 + E; int FPos = 1;
+int Fs = 62 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
+int G = 97 + E; int GPos = 3;
+int Gs = 128 + E; int GsPos = 4;
+int A = 155 + E; int APos = 5;
+int As = 181 + E; int AsPos = 6;
+int B = 204 + E; int BPos = 7;
+//no B sharp
+int C = 226 + E; int CPos = 8;    
+int Cs = 245 + E; int CsPos = 9;
+int D = 268 + E; int DPos = 10;
+int Ds = 289 + E; int DsPos = 11;
+
+int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
+
+
+//-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
+//the song needs to be input once as a string matrix and once as a numerical matrix
+
+//I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
+int cant_help_falling[100]= {C,E,A,F,C,G,F,G,A,F,C,G,C,C,E,A,F,C,G,F,G,A,F,C,G,C};
+int cant_help_falling_majorminor[100]={1,0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,0,1,1,1,1};
+//int cant_help_falling_timing[100]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
+int cant_help_falling_timing[100]={1,1,2,1,1,2,1,1,1,1,1,1,2,1,1,2,1,1,2,1,1,1,1,1,1,1};
+const int cant_help_falling_numchords= sizeof(cant_help_falling)/sizeof(cant_help_falling[0]);
+
+int hotelcalifornia[100]={B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,G,D,Fs,B,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,G,D,Fs,B,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs};
+int hotelcalifornia_majorminor[100]={0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1};
+int hotelcalifornia_timing[100]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}; //now, each element in the array represents how many measures the given chord lasts for, rather than the number of the measure at which its struck
+const int hotelcalifornia_numchords= sizeof(hotelcalifornia)/(sizeof(hotelcalifornia[0]));
+/*String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
+
+/*int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
+char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
+int measures[]={1,2,3,5,6,7,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33};*/
+
+
+//------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
+void setup() {
+  Serial.begin(9600);
+  pinMode(strumhome, INPUT_PULLUP); //sets two limit switches as inputs with internal resistors
+  pinMode(frethome, INPUT_PULLUP);
+  majorminor.attach(11);  //attaches majorminor servo to pin 11
+  muting.attach(4);
+  servosChangingFrets();
+  fretting.setMaxSpeed(1000000.0); //set arbitrarily high max speed, in units of [pulses/sec] (max reliable is about 4000 according to accelstepper).Prevents speed from being limited by code, we will not use this
+  strumming.setMaxSpeed(1000000.0);
+  delay(1000);
+
+  goHome(fret_strokelengthmm, fret_mmPerStep, fretting, frethome, fretHomingSpeed);
+  goHome(strum_strokelengthmm, strum_mmPerStep, strumming, strumhome, strumHomingSpeed);
+}
+//-------------------------------------END SETUP------------------------------------------------------------------
+
+
+//-------------------------------------START VOID LOOP------------------------------------------------------------
+
+void loop() { //here is where we will call all our functions
+//playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
+
+ playsong(hotelcalifornia,hotelcalifornia_majorminor,hotelcalifornia_timing, 74, 4,hotelcalifornia_numchords);
   
+  
+
   
 }
 
-void loop() {
-trapmotion(100,2);
+//------------------------------------END VOID LOOP---------------------------------------------------------------
 
- 
+
+//------------------------------------START FUNCTIONS-------------------------------------------------------------
+//---servos---
+void servosUp() { //both servos up
+  majorminor.write(majorminor_up);
+  muting.write(mute_up);
 }
-void gohome(){
-  long strokelength=ceil(strokelengthmm/mmPerStep); // convert stroke length from mm to number of steps. This way the carriage will always travel far enough to hit the home switch.
-  stepper.moveTo(strokelength);  //sets the target position in steps, of the stepper motor. It does not actually tell it to move yet. 
-  while(digitalRead(switch1)==0){  //while the switch is not pressed, do the following
-    stepper.setSpeed(-300); //setting the speed, with negative being towards the home switch. Setting the position in each instance of a loop, makes it travel at a constant speed. If is confusion talk to sam for a shitty explanation
-    stepper.run(); //Executes a step in each iteration of the loop. Does math to achieve desired speed and accel
+
+void servosChangingFrets() {
+  majorminor.write(majorminor_up);
+  muting.write(mute_down);
+}
+
+//---go home----
+void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limitSwitch, int homingSpeed) {
+  long strokelength = ceil(strokeLengthmm / mmPerStep); //calculates number of steps to traverse entire rail
+  stepper.moveTo(strokelength);
+
+  while (digitalRead(limitSwitch) == 0) {
+    stepper.setSpeed(homingSpeed);
+    stepper.run();
     //Serial.println(stepper.currentPosition());
   }
   stepper.setCurrentPosition(0); //once home, set position to zero for reference
   delay(1000);
 }
 
-void gotoPositionAtSpeed(long posmm, float spedmm, float accelmm){ 
-    long numSteps=ceil(posmm/mmPerStep);
-    float Speed=spedmm/mmPerStep;
-    float acceleration=accelmm/mmPerStep;
-    stepper.setSpeed(Speed);
-    stepper.setAcceleration(acceleration);
-    stepper.moveTo(numSteps);
-    while(stepper.currentPosition()!=stepper.targetPosition()){
-      stepper.run();
-      //Serial.println(stepper.currentPosition());
-    }
-}
-
-void gotoPositionAtSpeedsteps(long posmm, float sped, float accel){
-    long numSteps=ceil(posmm/mmPerStep);
-    //float Speed=spedmm/mmPerStep;
-    //float acceleration=accelmm/mmPerStep;
-    stepper.setSpeed(sped);
-    stepper.setAcceleration(accel);
-    stepper.moveTo(numSteps);
-    while(stepper.currentPosition()!=stepper.targetPosition()){
-      stepper.run();
-      //Serial.println(stepper.currentPosition());
-    }
-}
-
-void trianglemotion (long posmm,float t){ //plans and executes the triangular motion profile to get the carriage to the desired position in the desired amount of time, limited by the max velocity of 4000 steps/s
-  long targetsteps=floor(posmm/mmPerStep); //number of steps needed to get to abolute desired position
-  float v_avg= abs((stepper.currentPosition()-targetsteps)/t); //avg speed to get to desired position from current position
-  float v_max= 2*v_avg; //max velocity assuming equal time accelerating and decelerating
-  float accel = (2*v_max)/t; //necessaey accel to get to v_max at time t/2
-  //Serial.println(v_max);
-  stepper.setSpeed(v_max); //set the target speed of travel
-  stepper.setAcceleration(accel); //set the necessary accel/decel
-  stepper.moveTo(targetsteps); //assign target location
-  while(stepper.currentPosition()!=stepper.targetPosition()){ //while not at the target position, execute steps
-    stepper.run();
-  }
+void strum(float strumTime, int positionmm) {
+  long target=floor(positionmm/strum_mmPerStep);
+  float strumSpeed= target/strumTime;
   
+  strumming.setSpeed(strumSpeed);
+  strumming.setAcceleration(10000);
+  strumming.runToNewPosition(target);
 }
 
-void trapmotion( long posmm, float t){     // this function uses a trapezoidal motion profile with equal times of acceleration, constant speed, and deceleration. from this link: 
-  long targetsteps=floor(posmm/mmPerStep); //number of steps needed to get to abolute desired position
-  float accel = (4.5*(stepper.currentPosition()-targetsteps))/pow(t,2);   //calc accel needed
-  float v_max = (1.5*(stepper.currentPosition()-targetsteps))/t;       //calc max (target) velocity
-  stepper.setSpeed(v_max);                 // set motion parameters
-  stepper.setAcceleration(accel);
-  stepper.moveTo(targetsteps);
-  while(stepper.currentPosition()!=stepper.targetPosition()){ //while not at the target position, execute steps
-    stepper.run();
+
+void gotochord(int chordAsNum, bool major,double t) { //posInSongMatrixStrings will be the counter in a for loop
+  servosChangingFrets();
+  bool is_major=major;
+  //bool major = majorMinorBoolean(arrayposition, major_minor_array);
+  long targetsteps = floor(chordAsNum / fret_mmPerStep);
+  float accel = (4.5 * (fretting.currentPosition() - targetsteps)) / pow(t, 2);
+  float v_max = (1.5 * (fretting.currentPosition() - targetsteps)) / t;
+  fretting.setSpeed(v_max);
+  fretting.setAcceleration(accel);
+  fretting.moveTo(targetsteps);
+  while (fretting.currentPosition() != fretting.targetPosition()) { //while not at the target position, execute steps
+    fretting.run();
+  }
+  muting.write(mute_up);
+  if (is_major == true) {
+    majorminor.write(majorminor_down);
+  }
+  muting.write(mute_up);
+}
+
+void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords){
+  //---------------------calculate constants and stuff---------------//
+  double strum_time=0.75; //time to make strummer move across the strings in seconds
+  double BPS=tempo/60;  //beats per second
+  double SPB=1/BPS; //seconds per beat
+  double secs_per_measure= time_sig_numerator*SPB; //multiplies the time of each beat by the number of beats in a measure
+  double transition_ratio=0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
+  double transition_time;
+  int last_chord;
+//---------------------preparing to play--------------------//
+  servosChangingFrets();
+  delay(1000);
+  strum(0.5,strumPosRight);
+  delay(1000);
+  bool first_state=false;
+  if(song_majorminor[0]==1){
+    first_state=true;
+  }
+  gotochord(songchords[0],first_state,1);
+//----------------------begin playing---------------------//
+  for(int i=0; i<numchords; i++){ ////*************************** not sure if num_chords is working
+    Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
+    
+
+      
+      int next_chord=songchords[i+1];
+      bool next_chord_state=false; //false=minor, true =major
+      //int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
+      int current_num_measures=songtiming[i];
+      double current_chord_time= current_num_measures*secs_per_measure; //seconds that current chord takes up
+      if(song_majorminor[i+1]==1){
+        next_chord_state=true;
+      }
+      double time_let_ring=(1-transition_ratio)*current_chord_time; //time to let the current chord be played for
+
+      /*if(next_chord_state=true){
+        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time+majorminor_time);
+      }
+      if(next_chord_state=false){
+        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time);
+      }*/
+      transition_time=(current_chord_time*transition_ratio);
+     
+
+      if((i%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+        strum(strum_time, strumPosLeft);
+      }
+      if((i%2!=0)&&(strumming.currentPosition()<strum_mid)){
+        strum(strum_time,strumPosRight);
+      }
+      
+
+      delay((time_let_ring-(strum_time))*1000); //let the chord ring out
+
+      gotochord(next_chord,next_chord_state,transition_time);
+
+      last_chord=i+1;
+    
+  }
+  if((last_chord%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+    strum(strum_time, strumPosLeft);
+  }
+  if((last_chord%2!=0)&&(strumming.currentPosition()<strum_mid)){
+    strum(strum_time,strumPosRight);
   }
 }
 
-void gotoangle(int a){
-  //pos=90;
-  while (frettingservo.read()!=a){
-    if(a>frettingservo.read()){
-      pos++;
-    }
-    if(a<frettingservo.read()){
-      pos--;
-    }
-    frettingservo.write(pos);
-    delay(15);
+
+/*bool majorMinorBoolean(int currentNotePos,String major_minor_array) { //returns if the note currently about to be played is major or minor (ex d would return true, dm would return false)
+  bool majorMinorBoolValue;
+  String currentNote = major_minor_array[currentNotePos];
+  int noteNameLength = currentNote.length(); //store the length(# of characters) in the note name so we can check if the last letter is m for minor, noteNameLength=noteName.length();
+  char noteNameLastLetter = currentNote.charAt(noteNameLength); //store the last letter of the note name with noteName.charAt(noteNameLength); use if(noteNameLastLetter == 'm') for major minor
+
+  if (noteNameLastLetter == 'm') {
+    majorMinorBoolValue = false;
+  } else {
+    majorMinorBoolValue = true;
   }
-}
+  return (majorMinorBoolValue);
+}*/
+
+
+
+//-----------------------------------------END FUNCTIONS--------------------------------------------------------------
