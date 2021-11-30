@@ -174,7 +174,7 @@ void loop() { //here is where we will call all our functions
       Serial.println("Decreasing value");
     }
     Serial.println(rotationValue);
-    delay(150);
+    delay(200);
   }
 
   if (digitalRead(blueButton) == LOW) {
@@ -189,7 +189,7 @@ void loop() { //here is where we will call all our functions
       Serial.println("increasing value to 2");
     }
     Serial.println(rotationValue);
-    delay(150);
+    delay(200);
   }
 
   if (digitalRead(greenButton) == LOW) {
