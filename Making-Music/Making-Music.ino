@@ -57,7 +57,11 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 
 int rotationValue = 1; // start at the first song
+<<<<<<< Updated upstream
 int numOfSongs = 2; //number of songs we can play
+=======
+int numOfSongs = 0; //number of songs we can play, is summed up later
+>>>>>>> Stashed changes
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
 
@@ -92,6 +96,7 @@ int cant_help_falling_majorminor[] = {1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 
 //int cant_help_falling_timing[]= {1,2,3,5,6,7,9,10,11,12,13,14,15,17,18,19,21,22,23,25,26,27,28,29,30,31};
 int cant_help_falling_timing[] = {1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1};
 const int cant_help_falling_numchords = sizeof(cant_help_falling) / sizeof(cant_help_falling[0]);
+<<<<<<< Updated upstream
 
 int hotelcalifornia[] = {B, Fs, A, E, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, G, D, Fs, B, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, G, D, Fs, B, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs};
 int hotelcalifornia_majorminor[] = {0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1};
@@ -102,6 +107,17 @@ const int hotelcalifornia_numchords = sizeof(hotelcalifornia) / (sizeof(hotelcal
   /*int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
   char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
   int measures[]={1,2,3,5,6,7,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33};*/
+=======
+numOfSongs = numOfSongs+1;
+
+//HOTEL CALIFORNIA CHORD PROGRESSION
+
+int hotelcalifornia[] = {B, Fs, A, E, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, G, D, Fs, B, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, G, D, Fs, B, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs, B, Fs, A, E, G, D, E, Fs};
+int hotelcalifornia_majorminor[] = {0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1};
+int hotelcalifornia_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; //now, each element in the array represents how many measures the given chord lasts for, rather than the number of the measure at which its struck
+const int hotelcalifornia_numchords = sizeof(hotelcalifornia) / (sizeof(hotelcalifornia[0]));
+numOfSongs = numOfSongs+1;
+>>>>>>> Stashed changes
 
 
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
@@ -294,14 +310,22 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   Serial.print("strum time in secs: "); Serial.println(strum_time);
   double pauseBetweenStrums = ((secs_per_measure-(2*strum_time))/3);
   Serial.print("pause time in secs: "); Serial.println(pauseBetweenStrums);
+<<<<<<< Updated upstream
   //double strum_time = 0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
+=======
+ 
+>>>>>>> Stashed changes
   double strum_timemillis = strum_time * 1000;
   double pauseBetweenStrumsMillis = pauseBetweenStrums * 1000;
   Serial.print("Strum time in millis: "); Serial.println(strum_timemillis);
   Serial.print("Pause time in millis: "); Serial.println(pauseBetweenStrumsMillis);
+<<<<<<< Updated upstream
   //not functioning, why?
   //double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   //int last_chord;
+=======
+
+>>>>>>> Stashed changes
   bool firstChord_mmstate; //false = minor, true = major
   bool nextChord_mmstate; //false=minor, true =major
   //---------------------preparing to play--------------------//
@@ -324,12 +348,17 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord lasts for
     double current_chord_timeMillis = current_chord_time * 1000;
     double time_let_ring_millis = current_chord_timeMillis - pauseBetweenStrumsMillis; //chord plays for entire length minus the time of one pause, spends that pause time moving to the next chord
+<<<<<<< Updated upstream
     //double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for, 75% of time the current chord plays for
     //int time_let_ring_millis = (time_let_ring * 1000);
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
 
     //double transition_time = (current_chord_time * transition_ratio); //time to let the chords change, 25% of total time , replaced by pauseBetweenStrumsMillis
 
+=======
+    Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
+
+>>>>>>> Stashed changes
     if (song_majorminor[i + 1] == 1) { //determine major minor servo position
       nextChord_mmstate = true;
     } else {
@@ -367,6 +396,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
       Serial.print("This much time remaining on chord: "); Serial.println(remainingTime);
 
+<<<<<<< Updated upstream
       // delay(time_let_ring_millis - timeSpentStrumming); //let the chord ring out for any remaining time
       // Serial.println("Completed pause");
       int remainingTimeinSec = remainingTime/1000;
@@ -376,6 +406,11 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       //gotochord(songchords[i + 1], nextChord_mmstate, transition_time);
 
       //last_chord = i + 1;
+=======
+      int remainingTimeinSec = remainingTime/1000;
+      gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
+      Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
+>>>>>>> Stashed changes
     }
     
     Serial.println("Completed song");
