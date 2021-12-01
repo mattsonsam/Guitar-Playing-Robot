@@ -30,7 +30,7 @@ int majorminor_up = 0;
 int mute_down = 35; //this needs to be determined
 int mute_up = 60; //this needs to be determined
 
-int strumPosLeft = 0;
+int strumPosLeft = 30;
 int strumPosRight = 83;
 int strum_mid = (strumPosRight+strumPosLeft)/2;
 int strumTraversalDistance = strumPosRight - strumPosLeft; //1530 steps for 150 and 1680
@@ -78,11 +78,13 @@ int hotelcalifornia[100]={B,Fs,A,E,G,D,E,Fs,B,Fs,A,E,G,D,E,Fs,G,D,Fs,B,G,D,E,Fs,
 int hotelcalifornia_majorminor[100]={0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1};
 int hotelcalifornia_timing[100]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}; //now, each element in the array represents how many measures the given chord lasts for, rather than the number of the measure at which its struck
 const int hotelcalifornia_numchords= sizeof(hotelcalifornia)/(sizeof(hotelcalifornia[0]));
-/*String cant_help_falling_majorminor[]={"C","Em","Am","F","C","G","F","G","Am","F","C","G","C","C","Em","Am","F","C","G","F","G","Am","F","C","G","C"};
 
-/*int songMatrixNums[] = {C, G, A, C, G, C, E, A, F, C, G, F, G, A, F, C, G, C, F, G, A, F, C, G, C, E, B, E, B, E, B, E, A, D, G}; //do not include major minor here
-char *SongMatrixStrings[] = {"C", "G", "Am", "C", "G", "C", "Em", "Am", "F", "C", "G", "F", "G", "Am", "F", "C", "G", "C", "F", "G", "Am", "F", "C", "G", "C", "Em", "B", "Em", "B", "Em", "B", "Em", "Am", "Dm", "G"};
-int measures[]={1,2,3,5,6,7,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33};*/
+
+int ironman[100]={E,G, G, A,A,C,B,C,B,C,G,G,A,A,E,G, G, A,A,C,B,C,B,C,G,G,A,A}; //{B, D, D,E,E,G,Fs,G,Fs,G,D,D,E,E}
+int ironman_majorminor[100]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+double ironman_timing[100]={4,4,2,2,4,1,1,1,1,2,2,2,2,4,4,4,2,2,4,1,1,1,1,2,2,2,2,4};  //{.25,.25,.125,.125,.25,.0625, .0625,.0625,.0625,.125,.125,.125,.125,.25}
+const int ironman_numchords= sizeof(ironman)/sizeof(ironman[0]);
+
 
 
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
@@ -108,8 +110,8 @@ void setup() {
 void loop() { //here is where we will call all our functions
 //playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
 
- playsong(hotelcalifornia,hotelcalifornia_majorminor,hotelcalifornia_timing, 74, 4,hotelcalifornia_numchords);
-  
+ //playsong(hotelcalifornia,hotelcalifornia_majorminor,hotelcalifornia_timing, 147, 4,hotelcalifornia_numchords);
+  playsong(ironman,ironman_majorminor, ironman_timing,600, 4, ironman_numchords);
   
 
   
@@ -174,9 +176,9 @@ void gotochord(int chordAsNum, bool major,double t) { //posInSongMatrixStrings w
   muting.write(mute_up);
 }
 
-void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords){
+void playsong(int songchords[], int song_majorminor[], double songtiming[], int tempo, int time_sig_numerator, int numchords){
   //---------------------calculate constants and stuff---------------//
-  double strum_time=0.75; //time to make strummer move across the strings in seconds
+  double strum_time=0.25; //time to make strummer move across the strings in seconds
   double BPS=tempo/60;  //beats per second
   double SPB=1/BPS; //seconds per beat
   double secs_per_measure= time_sig_numerator*SPB; //multiplies the time of each beat by the number of beats in a measure
@@ -218,10 +220,10 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       transition_time=(current_chord_time*transition_ratio);
      
 
-      if((i%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+      if(i%2==0){ // assumes that strummer starts at strumPosRight
         strum(strum_time, strumPosLeft);
       }
-      if((i%2!=0)&&(strumming.currentPosition()<strum_mid)){
+      if(i%2!=0){
         strum(strum_time,strumPosRight);
       }
       
