@@ -118,7 +118,7 @@ void setup() {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Starting...");
-  
+
   majorminor.attach(11);  //attaches majorminor servo to pin 11
   muting.attach(4);
   servosChangingFrets();
@@ -134,8 +134,8 @@ void setup() {
   Serial.print("Rotation Value: "); Serial.println(rotationValue);
   Serial.print("Number of Songs: "); Serial.println(numOfSongs);
 
-
 }
+
 //-------------------------------------END SETUP------------------------------------------------------------------
 
 
@@ -288,11 +288,19 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   double BPS = tempo / 60; //beats per second
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
-  double strum_time = 0.75; //(.25*secs_per_measure);//0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
-  double strum_timemillis = strum_time*1000;
+  Serial.print("Secs per measure: ");  Serial.println(secs_per_measure);
+  double strum_time = (secs_per_measure/4);
+  
+  Serial.print("strum time in secs: "); Serial.println(strum_time);
+  double pauseBetweenStrums = ((secs_per_measure-(2*strum_time))/3);
+  Serial.print("pause time in secs: "); Serial.println(pauseBetweenStrums);
+  //double strum_time = 0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
+  double strum_timemillis = strum_time * 1000;
+  double pauseBetweenStrumsMillis = pauseBetweenStrums * 1000;
   Serial.print("Strum time in millis: "); Serial.println(strum_timemillis);
+  Serial.print("Pause time in millis: "); Serial.println(pauseBetweenStrumsMillis);
   //not functioning, why?
-  double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
+  //double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   //int last_chord;
   bool firstChord_mmstate; //false = minor, true = major
   bool nextChord_mmstate; //false=minor, true =major
@@ -313,13 +321,14 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   for (int i = 0; i < numchords; i++) {
     Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
 
-    int next_chord = songchords[i + 1]; //value of next chord in array
-
     double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord lasts for
-    double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for, 75% of time the current chord plays for
-    int time_let_ring_millis = (time_let_ring * 1000);
+    double current_chord_timeMillis = current_chord_time * 1000;
+    double time_let_ring_millis = current_chord_timeMillis - pauseBetweenStrumsMillis; //chord plays for entire length minus the time of one pause, spends that pause time moving to the next chord
+    //double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for, 75% of time the current chord plays for
+    //int time_let_ring_millis = (time_let_ring * 1000);
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
-    double transition_time = (current_chord_time * transition_ratio); //time to let the chords change, 25% of total time 
+
+    //double transition_time = (current_chord_time * transition_ratio); //time to let the chords change, 25% of total time , replaced by pauseBetweenStrumsMillis
 
     if (song_majorminor[i + 1] == 1) { //determine major minor servo position
       nextChord_mmstate = true;
@@ -330,34 +339,49 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     unsigned int timeBeforeStrum = millis();
     Serial.print("Time before strum: "); Serial.println(timeBeforeStrum);
 
-    int timeToCompleteStrum = (700 + (2*strum_timemillis));
-    Serial.print("Time to complete one strum: "); Serial.println(timeToCompleteStrum);
-    int numStrumLoops = floor((time_let_ring_millis - 200) / timeToCompleteStrum); //400 is minimum ring out time
+    //int timeToCompleteStrum = (700 + (2*strum_timemillis));
+    int timeToCompleteStrumMillis = (strum_timemillis + pauseBetweenStrumsMillis) * 2;
+    Serial.print("Time to complete one strum: "); Serial.println(timeToCompleteStrumMillis);
+
+    int numStrumLoops = floor(time_let_ring_millis / timeToCompleteStrumMillis);
     Serial.print("Loops: "); Serial.println(numStrumLoops);
     for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
       strum(strum_time, strumPosLeft);
-      delay(350);
+      delay(pauseBetweenStrumsMillis);
       strum(strum_time, strumPosRight);
-      delay(350);
+      
+      if (strumLoops == (numStrumLoops - 1)) {
+        delay(0);
+      } else {
+        delay(pauseBetweenStrumsMillis);
+      }
     }
-    Serial.println("Completed strum");
-    unsigned int timeAfterStrum = millis();
-    Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
+      
+      Serial.println("Completed strum");
+      unsigned int timeAfterStrum = millis();
+      Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
+
+      int timeSpentStrumming = (timeAfterStrum - timeBeforeStrum);
+      Serial.print("Strummed for this many millis: "); Serial.println(timeSpentStrumming);
+      double remainingTime = time_let_ring_millis - timeSpentStrumming;
+
+      Serial.print("This much time remaining on chord: "); Serial.println(remainingTime);
+
+      // delay(time_let_ring_millis - timeSpentStrumming); //let the chord ring out for any remaining time
+      // Serial.println("Completed pause");
+      int remainingTimeinSec = remainingTime/1000;
+      gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
+      //gotochord(songchords[i + 1], nextChord_mmstate, pauseBetweenStrumsMillis);
+      Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
+      //gotochord(songchords[i + 1], nextChord_mmstate, transition_time);
+
+      //last_chord = i + 1;
+    }
     
-    int timeSpentStrumming = (timeAfterStrum - timeBeforeStrum);
-    Serial.print("Strummed for this many millis: "); Serial.println(timeSpentStrumming);
-
-    Serial.print("Pause for this many millis: "); Serial.println(time_let_ring_millis - timeSpentStrumming);
-    
-    delay(time_let_ring_millis - timeSpentStrumming); //let the chord ring out
-
-    gotochord(next_chord, nextChord_mmstate, transition_time);
-
-    //last_chord = i + 1;
-  }
+    Serial.println("Completed song");
 }
 
 
-//----------END PLAYING A SONG--------------
+  //----------END PLAYING A SONG--------------
 
-//-----------------------------------------END FUNCTIONS--------------------------------------------------------------
+  //-----------------------------------------END FUNCTIONS--------------------------------------------------------------
