@@ -228,7 +228,7 @@ void loop() { //here is where we will call all our functions
         lcd.print("Playing:");
         lcd.setCursor(0, 1);
         lcd.print("Ironman");
-        playIronman(ironman,ironman_majorminor, ironman_timing,600, 4, ironman_numchords);
+        playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
         break;
       default:
         Serial.println("You done fucked up somehow...");
@@ -308,11 +308,11 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
   Serial.print("Secs per measure: ");  Serial.println(secs_per_measure);
- // if (rotationValue == 3) {
- //   double strum_time = .25;
+  // if (rotationValue == 3) {
+  //   double strum_time = .25;
   //} else {
-    double strum_time = (secs_per_measure / 4);
- // }
+  double strum_time = (secs_per_measure / 4);
+  // }
 
   Serial.print("strum time in secs: "); Serial.println(strum_time);
   double pauseBetweenStrums = ((secs_per_measure - (2 * strum_time)) / 3);
@@ -395,6 +395,9 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
     int remainingTimeinSec = remainingTime / 1000;
     gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
+    if (digitalRead(greenButton) == LOW) {
+      break;
+    }
     Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
   }
 
@@ -404,70 +407,72 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
 //----------END PLAYING A SONG--------------
 //-----------PLAY IRONMAN-------
-void playIronman(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords){
+void playIronman(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) {
   //---------------------calculate constants and stuff---------------//
-  double strum_time=0.25; //time to make strummer move across the strings in seconds
-  double BPS=tempo/60;  //beats per second
-  double SPB=1/BPS; //seconds per beat
-  double secs_per_measure= time_sig_numerator*SPB; //multiplies the time of each beat by the number of beats in a measure
-  double transition_ratio=0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
+  double strum_time = 0.25; //time to make strummer move across the strings in seconds
+  double BPS = tempo / 60; //beats per second
+  double SPB = 1 / BPS; //seconds per beat
+  double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
+  double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   double transition_time;
   int last_chord;
-//---------------------preparing to play--------------------//
+  //---------------------preparing to play--------------------//
   servosChangingFrets();
   delay(1000);
-  strum(0.5,strumPosRight);
+  strum(0.5, strumPosRight);
   delay(1000);
-  bool first_state=false;
-  if(song_majorminor[0]==1){
-    first_state=true;
+  bool first_state = false;
+  if (song_majorminor[0] == 1) {
+    first_state = true;
   }
-  gotochord(songchords[0],first_state,1);
-//----------------------begin playing---------------------//
-  for(int i=0; i<numchords; i++){ ////*************************** not sure if num_chords is working
+  gotochord(songchords[0], first_state, 1);
+  //----------------------begin playing---------------------//
+  for (int i = 0; i < numchords; i++) { ////*************************** not sure if num_chords is working
     Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
-    
 
-      
-      int next_chord=songchords[i+1];
-      bool next_chord_state=false; //false=minor, true =major
-      //int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
-      int current_num_measures=songtiming[i];
-      double current_chord_time= current_num_measures*secs_per_measure; //seconds that current chord takes up
-      if(song_majorminor[i+1]==1){
-        next_chord_state=true;
-      }
-      double time_let_ring=(1-transition_ratio)*current_chord_time; //time to let the current chord be played for
 
-      /*if(next_chord_state=true){
-        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time+majorminor_time);
+
+    int next_chord = songchords[i + 1];
+    bool next_chord_state = false; //false=minor, true =major
+    //int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
+    int current_num_measures = songtiming[i];
+    double current_chord_time = current_num_measures * secs_per_measure; //seconds that current chord takes up
+    if (song_majorminor[i + 1] == 1) {
+      next_chord_state = true;
+    }
+    double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for
+
+    /*if(next_chord_state=true){
+      transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time+majorminor_time);
       }
       if(next_chord_state=false){
-        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time);
+      transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time);
       }*/
-      transition_time=(current_chord_time*transition_ratio);
-     
+    transition_time = (current_chord_time * transition_ratio);
 
-      if(i%2==0){ // assumes that strummer starts at strumPosRight
-        strum(strum_time, strumPosLeft);
-      }
-      if(i%2!=0){
-        strum(strum_time,strumPosRight);
-      }
-      
 
-      delay((time_let_ring-(strum_time))*1000); //let the chord ring out
+    if (i % 2 == 0) { // assumes that strummer starts at strumPosRight
+      strum(strum_time, strumPosLeft);
+    }
+    if (i % 2 != 0) {
+      strum(strum_time, strumPosRight);
+    }
 
-      gotochord(next_chord,next_chord_state,transition_time);
 
-      last_chord=i+1;
-    
+    delay((time_let_ring - (strum_time)) * 1000); //let the chord ring out
+
+    gotochord(next_chord, next_chord_state, transition_time);
+
+    last_chord = i + 1;
+    if (digitalRead(greenButton) == LOW) {
+      break;
+    }
   }
-  if((last_chord%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+  if ((last_chord % 2 == 0) && (strumming.currentPosition() > strum_mid)) { // assumes that strummer starts at strumPosRight
     strum(strum_time, strumPosLeft);
   }
-  if((last_chord%2!=0)&&(strumming.currentPosition()<strum_mid)){
-    strum(strum_time,strumPosRight);
+  if ((last_chord % 2 != 0) && (strumming.currentPosition() < strum_mid)) {
+    strum(strum_time, strumPosRight);
   }
 }
 
