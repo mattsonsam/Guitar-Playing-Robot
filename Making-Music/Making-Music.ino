@@ -2,6 +2,7 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 #include <Servo.h>
+#include <LiquidCrystal.h>
 
 AccelStepper strumming(1, 54, 55); //using x-step pins
 AccelStepper fretting(1, 60, 61); //using y-step pins
@@ -10,6 +11,21 @@ Servo majorminor;
 
 int frethome = 3; //pin for limit switch for fretter
 int strumhome = 18; //pin for limit switch for strummer
+
+//LCD displays
+int rsPin = 16;
+//rw is to ground
+int enablePin = 17;
+int d4Pin = 23;
+int d5Pin = 25;
+int d6Pin = 27;
+int d7Pin = 29;
+
+LiquidCrystal lcd(rsPin, enablePin, d4Pin, d5Pin, d6Pin, d7Pin);
+
+int yellowButton = 31;
+int greenButton = 33;
+int blueButton = 35;
 
 long fret_strokelengthmm = 400; //the length of the entire fretting linear rail
 double fret_step_per_rev = 200; // steps per revolution of stepper
@@ -39,6 +55,9 @@ double servosChangingFretsTime = 0.5;
 double majorminor_time = 0.4;
 int muting_time = 0.4; //variables representing the time in seconds it takes for the servos to move in either direction (assuming its the same time for both directions)
 
+
+int rotationValue = 1; // start at the first song
+int numOfSongs = 2; //number of songs we can play
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
 
@@ -90,6 +109,16 @@ void setup() {
   Serial.begin(9600);
   pinMode(strumhome, INPUT_PULLUP); //sets two limit switches as inputs with internal resistors
   pinMode(frethome, INPUT_PULLUP);
+
+  pinMode(yellowButton, INPUT_PULLUP);
+  pinMode(greenButton, INPUT_PULLUP);
+  pinMode(blueButton, INPUT_PULLUP);
+
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Starting...");
+  
   majorminor.attach(11);  //attaches majorminor servo to pin 11
   muting.attach(4);
   servosChangingFrets();
@@ -102,6 +131,8 @@ void setup() {
 
   Serial.print("Hotel California # chords: "); Serial.println(hotelcalifornia_numchords);
   Serial.print("Falling In Love # chords: "); Serial.println(cant_help_falling_numchords);
+  Serial.print("Rotation Value: "); Serial.println(rotationValue);
+  Serial.print("Number of Songs: "); Serial.println(numOfSongs);
 
 
 }
@@ -111,14 +142,83 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
-  //playsong(cant_help_falling,cant_help_falling_majorminor,cant_help_falling_timing,100,3,cant_help_falling_numchords);
+  switch (rotationValue) { //use a switch statement to determine which song to display
+    case 1:
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Hotel California");
+      break;
+    case 2:
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("I Can't Help Falling");
+      lcd.setCursor(0, 1);
+      lcd.print("In Love With You");
+      break;
+    default:
+      Serial.println("You done fucked up somehow...");
+      break;
+  }
 
-  playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
+  if (digitalRead(yellowButton) == LOW) {
+    //yellow button pressed, decrease value
+    Serial.println("Yellow Button Pressed");
+    Serial.println(rotationValue);
+    if (rotationValue == 1) {
+      rotationValue = numOfSongs;
+      Serial.println("resetting value to 2");
+    } else {
+      rotationValue = rotationValue - 1;
+      Serial.println("Decreasing value");
+    }
+    Serial.println(rotationValue);
+    delay(200);
+  }
 
+  if (digitalRead(blueButton) == LOW) {
+    Serial.println("Blue Button Pressed");
+    Serial.println(rotationValue);
+    //blue button pressed, increase value
+    if (rotationValue == numOfSongs) {
+      rotationValue = 1;
+      Serial.println("resetting value to 1");
+    } else {
+      rotationValue = rotationValue + 1;
+      Serial.println("increasing value to 2");
+    }
+    Serial.println(rotationValue);
+    delay(200);
+  }
 
+  if (digitalRead(greenButton) == LOW) {
+    Serial.println("Green Button Pressed, Playing Song");
+    Serial.println(rotationValue);
+    switch (rotationValue) { //use a switch statement to determine which song to display
+      case 1:
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Playing:");
+        lcd.setCursor(0, 1);
+        lcd.print("Hotel California");
+        playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
 
+        break;
+      case 2:
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Playing:");
+        lcd.setCursor(0, 1);
+        lcd.print("Can't Help Falling");
+        playsong(cant_help_falling, cant_help_falling_majorminor, cant_help_falling_timing, 100, 3, cant_help_falling_numchords);
+        break;
+      default:
+        Serial.println("You done fucked up somehow...");
+        break;
+    }
+  }
 
 }
+
 
 //------------------------------------END VOID LOOP---------------------------------------------------------------
 
@@ -189,9 +289,11 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
   double strum_time = 0.75; //(.25*secs_per_measure);//0.75; //time to make strummer move across the strings in seconds //how to make function of something else?
+  double strum_timemillis = strum_time*1000;
+  Serial.print("Strum time in millis: "); Serial.println(strum_timemillis);
   //not functioning, why?
   double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
-  int last_chord;
+  //int last_chord;
   bool firstChord_mmstate; //false = minor, true = major
   bool nextChord_mmstate; //false=minor, true =major
   //---------------------preparing to play--------------------//
@@ -211,12 +313,13 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   for (int i = 0; i < numchords; i++) {
     Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
 
-    int next_chord = songchords[i + 1]; //location of next chord in array
+    int next_chord = songchords[i + 1]; //value of next chord in array
 
     double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord lasts for
     double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for, 75% of time the current chord plays for
-    int time_let_ring_millis = time_let_ring * 1000;
-    double transition_time = (current_chord_time * transition_ratio); //time to let the chords change
+    int time_let_ring_millis = (time_let_ring * 1000);
+    Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
+    double transition_time = (current_chord_time * transition_ratio); //time to let the chords change, 25% of total time 
 
     if (song_majorminor[i + 1] == 1) { //determine major minor servo position
       nextChord_mmstate = true;
@@ -225,25 +328,32 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     }
 
     unsigned int timeBeforeStrum = millis();
+    Serial.print("Time before strum: "); Serial.println(timeBeforeStrum);
 
-    int timeToCompleteStrum = 700 + (2*strum_time);
-    int numStrumLoops = floor((time_let_ring_millis - 400) / timeToCompleteStrum); //400 is minimum ring out time
-
+    int timeToCompleteStrum = (700 + (2*strum_timemillis));
+    Serial.print("Time to complete one strum: "); Serial.println(timeToCompleteStrum);
+    int numStrumLoops = floor((time_let_ring_millis - 200) / timeToCompleteStrum); //400 is minimum ring out time
+    Serial.print("Loops: "); Serial.println(numStrumLoops);
     for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
       strum(strum_time, strumPosLeft);
       delay(350);
       strum(strum_time, strumPosRight);
       delay(350);
     }
-
+    Serial.println("Completed strum");
     unsigned int timeAfterStrum = millis();
-    unsigned int timeSpentStrumming = timeAfterStrum - timeBeforeStrum;
+    Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
+    
+    int timeSpentStrumming = (timeAfterStrum - timeBeforeStrum);
+    Serial.print("Strummed for this many millis: "); Serial.println(timeSpentStrumming);
 
+    Serial.print("Pause for this many millis: "); Serial.println(time_let_ring_millis - timeSpentStrumming);
+    
     delay(time_let_ring_millis - timeSpentStrumming); //let the chord ring out
 
     gotochord(next_chord, nextChord_mmstate, transition_time);
 
-    last_chord = i + 1;
+    //last_chord = i + 1;
   }
 }
 
