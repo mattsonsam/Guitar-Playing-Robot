@@ -58,7 +58,7 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 2; //number of songs we can play, is summed up later
+int numOfSongs = 3; //number of songs we can play, is summed up later
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -101,7 +101,11 @@ int hotelcalifornia_majorminor[] = {0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0,
 int hotelcalifornia_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; //now, each element in the array represents how many measures the given chord lasts for, rather than the number of the measure at which its struck
 const int hotelcalifornia_numchords = sizeof(hotelcalifornia) / (sizeof(hotelcalifornia[0]));
 
-
+//IRONMAN CHORD PROGRESSION
+int ironman[100] = {E, G, G, A, A, C, B, C, B, C, G, G, A, A, E, G, G, A, A, C, B, C, B, C, G, G, A, A}; //{B, D, D,E,E,G,Fs,G,Fs,G,D,D,E,E}
+int ironman_majorminor[100] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int ironman_timing[100] = {4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4}; //{.25,.25,.125,.125,.25,.0625, .0625,.0625,.0625,.125,.125,.125,.125,.25}
+const int ironman_numchords = sizeof(ironman) / sizeof(ironman[0]);
 
 
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
@@ -155,6 +159,11 @@ void loop() { //here is where we will call all our functions
       lcd.setCursor(0, 1);
       lcd.print("In Love With You");
       break;
+    case 3:
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Ironman");
+      break;
     default:
       Serial.println("You done fucked up somehow...");
       break;
@@ -195,21 +204,31 @@ void loop() { //here is where we will call all our functions
     Serial.println(rotationValue);
     switch (rotationValue) { //use a switch statement to determine which song to display
       case 1:
+        strumPosLeft = 0;
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Playing:");
         lcd.setCursor(0, 1);
         lcd.print("Hotel California");
         playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
-
         break;
       case 2:
+        strumPosLeft = 0;
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Playing:");
         lcd.setCursor(0, 1);
         lcd.print("Can't Help Falling");
         playsong(cant_help_falling, cant_help_falling_majorminor, cant_help_falling_timing, 100, 3, cant_help_falling_numchords);
+        break;
+      case 3:
+        strumPosLeft = 30;
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Playing:");
+        lcd.setCursor(0, 1);
+        lcd.print("Ironman");
+        playsong(ironman,ironman_majorminor, ironman_timing,600, 4, ironman_numchords);
         break;
       default:
         Serial.println("You done fucked up somehow...");
@@ -289,10 +308,14 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
   Serial.print("Secs per measure: ");  Serial.println(secs_per_measure);
-  double strum_time = (secs_per_measure/4);
-  
+ // if (rotationValue == 3) {
+ //   double strum_time = .25;
+  //} else {
+    double strum_time = (secs_per_measure / 4);
+ // }
+
   Serial.print("strum time in secs: "); Serial.println(strum_time);
-  double pauseBetweenStrums = ((secs_per_measure-(2*strum_time))/3);
+  double pauseBetweenStrums = ((secs_per_measure - (2 * strum_time)) / 3);
   Serial.print("pause time in secs: "); Serial.println(pauseBetweenStrums);
 
   double strum_timemillis = strum_time * 1000;
@@ -352,33 +375,33 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       strum(strum_time, strumPosLeft);
       delay(pauseBetweenStrumsMillis);
       strum(strum_time, strumPosRight);
-      
+
       if (strumLoops == (numStrumLoops - 1)) {
         delay(0);
       } else {
         delay(pauseBetweenStrumsMillis);
       }
     }
-      
-      Serial.println("Completed strum");
-      unsigned int timeAfterStrum = millis();
-      Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
 
-      int timeSpentStrumming = (timeAfterStrum - timeBeforeStrum);
-      Serial.print("Strummed for this many millis: "); Serial.println(timeSpentStrumming);
-      double remainingTime = time_let_ring_millis - timeSpentStrumming;
+    Serial.println("Completed strum");
+    unsigned int timeAfterStrum = millis();
+    Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
 
-      Serial.print("This much time remaining on chord: "); Serial.println(remainingTime);
+    int timeSpentStrumming = (timeAfterStrum - timeBeforeStrum);
+    Serial.print("Strummed for this many millis: "); Serial.println(timeSpentStrumming);
+    double remainingTime = time_let_ring_millis - timeSpentStrumming;
 
-      int remainingTimeinSec = remainingTime/1000;
-      gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
-      Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
-    }
-    
-    Serial.println("Completed song");
+    Serial.print("This much time remaining on chord: "); Serial.println(remainingTime);
+
+    int remainingTimeinSec = remainingTime / 1000;
+    gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
+    Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
+  }
+
+  Serial.println("Completed song");
 }
 
 
-  //----------END PLAYING A SONG--------------
+//----------END PLAYING A SONG--------------
 
-  //-----------------------------------------END FUNCTIONS--------------------------------------------------------------
+//-----------------------------------------END FUNCTIONS--------------------------------------------------------------
