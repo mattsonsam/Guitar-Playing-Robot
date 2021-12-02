@@ -396,7 +396,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     int remainingTimeinSec = remainingTime / 1000;
     gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
     if (digitalRead(greenButton) == LOW) {
-      break;
+      return;
     }
     Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
   }
@@ -465,7 +465,7 @@ void playIronman(int songchords[], int song_majorminor[], int songtiming[], int 
 
     last_chord = i + 1;
     if (digitalRead(greenButton) == LOW) {
-      break;
+      return;
     }
   }
   if ((last_chord % 2 == 0) && (strumming.currentPosition() > strum_mid)) { // assumes that strummer starts at strumPosRight
