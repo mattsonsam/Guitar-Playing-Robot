@@ -74,7 +74,7 @@ String songname;
 int E = 0; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
 //no E sharp
 int F = 38 + E; int FPos = 1;
-int Fs = 62 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
+int Fs = 65 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
 int G = 97 + E; int GPos = 3;
 int Gs = 128 + E; int GsPos = 4;
 int A = 155 + E; int APos = 5;
@@ -239,8 +239,9 @@ void LCDDisplay() {
           delay(50);
         }
       }
+      break;
     default:
-      Serial.println("You done fucked up somehow...");
+      Serial.println("LCDDisplay: You done fucked up somehow...");
       break;
   }
 }
@@ -286,8 +287,9 @@ void playButtonPress() {
      lcd.setCursor(0,1);
      lcd.print("Brown Eyed Girl");
      playsong(browneyed, browneyed_majorminor, browneyed_timing, 149, 4, browneyed_numchords);
+     break;
     default:
-      Serial.println("You done fucked up somehow...");
+      Serial.println("Play Button Press: You done fucked up somehow...");
       break;
   }
 }
