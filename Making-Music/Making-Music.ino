@@ -1,4 +1,4 @@
-//TO DO: make iron man return to void loop, reformat iron man to fit in regular code, clean up void loop
+//TO DO:reformat iron man to fit in regular code
 
 //-------------------------------------SETUP VARIABLES----------------------------------------------------------------------------------------------------
 #include <AccelStepper.h>
@@ -87,7 +87,7 @@ int Ds = 289 + E; int DsPos = 11;
 int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
 
 //-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
-//the song needs to be input once as a string matrix and once as a numerical matrix
+
 
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
 int cant_help_falling[] = {C, E, A, F, C, G, F, G, A, F, C, G, C, C, E, A, F, C, G, F, G, A, F, C, G, C};
@@ -149,6 +149,30 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
+
+  LCDDisplay();
+
+  if (digitalRead(backButton) == LOW) {
+    backButtonPressed();
+  }
+
+  if (digitalRead(forwardButton) == LOW) {
+    forwardButtonPressed();
+  }
+
+  if (digitalRead(playButton) == LOW) {
+    playButtonPress();
+  }
+
+}
+
+
+//------------------------------------END VOID LOOP---------------------------------------------------------------
+
+
+//------------------------------------START FUNCTIONS-------------------------------------------------------------
+//-----LCD function------
+void LCDDisplay() {
   switch (rotationValue) { //use a switch statement to determine which song to display
     case 1:
       lcd.clear();
@@ -171,81 +195,77 @@ void loop() { //here is where we will call all our functions
       Serial.println("You done fucked up somehow...");
       break;
   }
+}
+//---End LCD Functions -----
 
-  if (digitalRead(backButton) == LOW) {
-    //yellow button pressed, decrease value
-    Serial.println("Yellow Button Pressed");
-    Serial.println(rotationValue);
-    if (rotationValue == 1) {
-      rotationValue = numOfSongs;
-      Serial.println("resetting value to 2");
-    } else {
-      rotationValue = rotationValue - 1;
-      Serial.println("Decreasing value");
-    }
-    Serial.println(rotationValue);
-    delay(200);
+//------Button Functions-------
+void playButtonPress() {
+  Serial.println("Play Button Pressed, Playing Song");
+  Serial.println(rotationValue);
+  switch (rotationValue) { //use a switch statement to determine which song to display
+    case 1:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Hotel California");
+      playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
+      break;
+    case 2:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Can't Help Falling");
+      playsong(cant_help_falling, cant_help_falling_majorminor, cant_help_falling_timing, 100, 3, cant_help_falling_numchords);
+      break;
+    case 3:
+      strumPosLeft = 30;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Ironman");
+      playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
+      break;
+    default:
+      Serial.println("You done fucked up somehow...");
+      break;
   }
-
-  if (digitalRead(forwardButton) == LOW) {
-    Serial.println("Blue Button Pressed");
-    Serial.println(rotationValue);
-    //blue button pressed, increase value
-    if (rotationValue == numOfSongs) {
-      rotationValue = 1;
-      Serial.println("resetting value to 1");
-    } else {
-      rotationValue = rotationValue + 1;
-      Serial.println("increasing value to 2");
-    }
-    Serial.println(rotationValue);
-    delay(200);
-  }
-
-  if (digitalRead(playButton) == LOW) {
-    Serial.println("Green Button Pressed, Playing Song");
-    Serial.println(rotationValue);
-    switch (rotationValue) { //use a switch statement to determine which song to display
-      case 1:
-        strumPosLeft = 0;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Playing:");
-        lcd.setCursor(0, 1);
-        lcd.print("Hotel California");
-        playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
-        break;
-      case 2:
-        strumPosLeft = 0;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Playing:");
-        lcd.setCursor(0, 1);
-        lcd.print("Can't Help Falling");
-        playsong(cant_help_falling, cant_help_falling_majorminor, cant_help_falling_timing, 100, 3, cant_help_falling_numchords);
-        break;
-      case 3:
-        strumPosLeft = 30;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Playing:");
-        lcd.setCursor(0, 1);
-        lcd.print("Ironman");
-        playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
-        break;
-      default:
-        Serial.println("You done fucked up somehow...");
-        break;
-    }
-  }
-
 }
 
+void backButtonPressed() {
+  //back button pressed, decrease value
+  Serial.println("Back Button Pressed");
+  Serial.println(rotationValue);
+  if (rotationValue == 1) {
+    rotationValue = numOfSongs;
+    Serial.println("resetting value to 2");
+  } else {
+    rotationValue = rotationValue - 1;
+    Serial.println("Decreasing value");
+  }
+  Serial.println(rotationValue);
+  delay(200);
+}
 
-//------------------------------------END VOID LOOP---------------------------------------------------------------
-
-
-//------------------------------------START FUNCTIONS-------------------------------------------------------------
+void forwardButtonPressed() {
+  Serial.println("Forward Button Pressed");
+  Serial.println(rotationValue);
+  //blue button pressed, increase value
+  if (rotationValue == numOfSongs) {
+    rotationValue = 1;
+    Serial.println("resetting value to 1");
+  } else {
+    rotationValue = rotationValue + 1;
+    Serial.println("increasing value to 2");
+  }
+  Serial.println(rotationValue);
+  delay(200);
+}
+//----End button functions----
 //---servos---
 void servosUp() { //both servos up
   majorminor.write(majorminor_up);
@@ -323,7 +343,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
   bool firstChord_mmstate; //false = minor, true = major
   bool nextChord_mmstate; //false=minor, true =major
-  
+
   //-------------------Printing calculated values for troubleshooting--------
   Serial.print("Secs per measure: ");  Serial.println(secs_per_measure);
   Serial.print("strum time in secs: "); Serial.println(strum_time);
@@ -388,7 +408,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       nextChord_mmstate = false;
     }
 
-        
+
     unsigned int timeAfterStrum = millis();
     Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
 
@@ -464,7 +484,7 @@ void playIronman(int songchords[], int song_majorminor[], int songtiming[], int 
     last_chord = i + 1;
     if (digitalRead(forwardButton) == LOW) {
       return;
-    } 
+    }
   }
   if ((last_chord % 2 == 0) && (strumming.currentPosition() > strum_mid)) { // assumes that strummer starts at strumPosRight
     strum(strum_time, strumPosLeft);
