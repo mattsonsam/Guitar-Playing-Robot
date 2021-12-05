@@ -60,7 +60,9 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 4; //number of songs we can play, is summed up later
+int numOfSongs = 3; //number of songs we can play, is summed up later
+
+String songname;
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -114,6 +116,7 @@ int browneyed[] = {G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, C
 int browneyed_majorminor[]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 int browneyed_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1 ,1, 1, 1, 1, 1, 1, 1};
 const int browneyed_numchords = sizeof(browneyed) / sizeof(browneyed[0]);
+
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(9600);
@@ -139,16 +142,13 @@ void setup() {
   goHome(fret_strokelengthmm, fret_mmPerStep, fretting, frethome, fretHomingSpeed);
   goHome(strum_strokelengthmm, strum_mmPerStep, strumming, strumhome, strumHomingSpeed);
 
-
-
   Serial.print("Hotel California # chords: "); Serial.println(hotelcalifornia_numchords);
   Serial.print("Falling In Love # chords: "); Serial.println(cant_help_falling_numchords);
   Serial.print("Iron Man # chords: "); Serial.println(ironman_numchords);
-  Serial.print("Brown Eyed Girl # Chords: "); Serial.println(browneyed_numchords);
   Serial.print("Rotation Value: "); Serial.println(rotationValue);
   Serial.print("Number of Songs: "); Serial.println(numOfSongs);
-
   LCDDisplay();
+
 }
 
 //-------------------------------------END SETUP------------------------------------------------------------------
@@ -184,26 +184,47 @@ void loop() { //here is where we will call all our functions
 void LCDDisplay() {
   switch (rotationValue) { //use a switch statement to determine which song to display
     case 1:
+      songname = "Hotel California";
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Hotel California");
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i < songname.length(); i++) {
+          lcd.scrollDisplayLeft();
+          delay(50);
+        }
+      }
       break;
     case 2:
+      songname = "Can't Help Fallin In Love w/ You";
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("I Can't Help Falling");
-      lcd.setCursor(0, 1);
-      lcd.print("In Love With You");
+      lcd.print(songname);
+      delay(1000);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
       break;
     case 3:
+      songname = "Ironman";
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Ironman");
-      break;
-    case 4:
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Brown Eyed Girl");
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i < songname.length(); i++) {
+          lcd.scrollDisplayLeft();
+          delay(50);
+        }
+      }
       break;
     default:
       Serial.println("You done fucked up somehow...");
@@ -244,14 +265,6 @@ void playButtonPress() {
       lcd.print("Ironman");
       playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
       break;
-    case 4:
-      strumPosLeft = 0;
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Playing:");
-      lcd.setCursor(0, 1);
-      lcd.print("Brown Eyed Girl");
-      playsong(browneyed, browneyed_majorminor, browneyed_timing, 149, 4, browneyed_numchords);
     default:
       Serial.println("You done fucked up somehow...");
       break;
@@ -397,6 +410,9 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
     //--------Print out values for debugging-------
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
+    Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
+
+
 
     unsigned int timeBeforeStrum = millis();
     Serial.print("Time before strum: "); Serial.println(timeBeforeStrum);
@@ -406,7 +422,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     Serial.print("Time to complete one strum: "); Serial.println(timeToCompleteStrumMillis);
 
     int numStrumLoops = floor(time_let_ring_millis / timeToCompleteStrumMillis);
-    Serial.print("Strums: "); Serial.println(numStrumLoops);
+    Serial.print("Loops: "); Serial.println(numStrumLoops);
     for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
       strum(strum_time, strumPosLeft);
       delay(pauseBetweenStrumsMillis);
@@ -418,7 +434,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
         delay(pauseBetweenStrumsMillis);
       }
     }
-    
+
     Serial.println("Completed strum");
 
     if (song_majorminor[i + 1] == 1) { //determine major minor servo position for the next chord
@@ -426,6 +442,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     } else {
       nextChord_mmstate = false;
     }
+
 
     unsigned int timeAfterStrum = millis();
     Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
@@ -443,7 +460,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       return;
     }
   }
-
+  LCDDisplay();
   Serial.println("Completed song");
 
 }
@@ -510,6 +527,7 @@ void playIronman(int songchords[], int song_majorminor[], int songtiming[], int 
   if ((last_chord % 2 != 0) && (strumming.currentPosition() < strum_mid)) {
     strum(strum_time, strumPosRight);
   }
+  LCDDisplay();
   Serial.println("Completed song");
 
 }
