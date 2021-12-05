@@ -58,7 +58,7 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 3; //number of songs we can play, is summed up later
+int numOfSongs = 4; //number of songs we can play, is summed up later
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -107,6 +107,10 @@ int ironman_majorminor[100] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 int ironman_timing[100] = {4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4}; //{.25,.25,.125,.125,.25,.0625, .0625,.0625,.0625,.125,.125,.125,.125,.25}
 const int ironman_numchords = sizeof(ironman) / sizeof(ironman[0]);
 
+int shot_the_sheriff[]={G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G,C,G,Ds,D,G,Ds,D,G,Ds,D,G,Ds,D,G,Ds,D,G,G,C,G,G,C,G,Ds,D,G,Ds,D,G,Ds,D,G,Ds,D,G,Ds,D,G,G,C,G,G,C,G};
+int shot_the_sheriff_majorminor[]={0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0};
+int shot_the_sheriff_timing[]=    {2,2,3,2,2,3,1,1,2,1,1,2,1,1,2,1,1,2,1,1,2,2,2,3,2,2,3,1,1,2,1,1,2,1,1,2,1,1,2,1,1,2,2,2,3,2,2,3,1,1,2,1,1,2,1,1,2,1,1,2,1,1,2,2,2,3,2,2,3};
+const int shot_the_sheriff_numchords= sizeof(shot_the_sheriff)/sizeof(shot_the_sheriff[0]);
 
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() {
@@ -135,6 +139,7 @@ void setup() {
 
   Serial.print("Hotel California # chords: "); Serial.println(hotelcalifornia_numchords);
   Serial.print("Falling In Love # chords: "); Serial.println(cant_help_falling_numchords);
+  Serial.print("Shot Cher oof: "); Serial.println(shot_the_sheriff_numchords);
   Serial.print("Rotation Value: "); Serial.println(rotationValue);
   Serial.print("Number of Songs: "); Serial.println(numOfSongs);
 
@@ -163,6 +168,11 @@ void loop() { //here is where we will call all our functions
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Ironman");
+      break;
+    case 4:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("I Shot the Sheriff");
       break;
     default:
       Serial.println("You done fucked up somehow...");
@@ -230,6 +240,16 @@ void loop() { //here is where we will call all our functions
         lcd.print("Ironman");
         playIronman(ironman,ironman_majorminor, ironman_timing,600, 4, ironman_numchords);
         break;
+      case 4:
+        strumPosLeft = 0;
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Playing:");
+        lcd.setCursor(0, 1);
+        lcd.print("I Shot The Sheriff");
+        playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 100, 4, shot_the_sheriff_numchords);
+        break;
+        
       default:
         Serial.println("You done fucked up somehow...");
         break;
