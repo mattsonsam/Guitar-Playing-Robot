@@ -60,7 +60,7 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 3; //number of songs we can play, is summed up later
+int numOfSongs = 4; //number of songs we can play, is summed up later
 
 String songname;
 
@@ -114,7 +114,7 @@ const int ironman_numchords = sizeof(ironman) / sizeof(ironman[0]);
 //BROWN EYED GIRL CHORD PROGRESSION
 int browneyed[] = {G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, C, D, G, E, C, D, G, Ds};
 int browneyed_majorminor[]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-int browneyed_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1 ,1, 1, 1, 1, 1, 1, 1};
+int browneyed_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1};
 const int browneyed_numchords = sizeof(browneyed) / sizeof(browneyed[0]);
 
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
@@ -145,6 +145,7 @@ void setup() {
   Serial.print("Hotel California # chords: "); Serial.println(hotelcalifornia_numchords);
   Serial.print("Falling In Love # chords: "); Serial.println(cant_help_falling_numchords);
   Serial.print("Iron Man # chords: "); Serial.println(ironman_numchords);
+  Serial.print("Brown Eyed Girl # chords: "); Serial.println(browneyed_numchords);
   Serial.print("Rotation Value: "); Serial.println(rotationValue);
   Serial.print("Number of Songs: "); Serial.println(numOfSongs);
   LCDDisplay();
@@ -226,6 +227,18 @@ void LCDDisplay() {
         }
       }
       break;
+    case 4:
+      songname = "Brown Eyed Girl";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i < songname.length(); i++) {
+          lcd.scrollDisplayLeft();
+          delay(50);
+        }
+      }
     default:
       Serial.println("You done fucked up somehow...");
       break;
@@ -265,6 +278,14 @@ void playButtonPress() {
       lcd.print("Ironman");
       playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
       break;
+     case 4:
+     strumPosLeft = 0;
+     lcd.clear();
+     lcd.setCursor(0,0);
+     lcd.print("Playing:");
+     lcd.setCursor(0,1);
+     lcd.print("Brown Eyed Girl");
+     playsong(browneyed, browneyed_majorminor, browneyed_timing, 149, 4, browneyed_numchords);
     default:
       Serial.println("You done fucked up somehow...");
       break;
