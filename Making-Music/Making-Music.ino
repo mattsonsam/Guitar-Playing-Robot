@@ -60,7 +60,7 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 4; //number of songs we can play, is summed up later
+int numOfSongs = 5; //number of songs we can play, is summed up later
 
 String songname;
 
@@ -117,6 +117,11 @@ int browneyed_majorminor[]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 int browneyed_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1, 1};
 const int browneyed_numchords = sizeof(browneyed) / sizeof(browneyed[0]);
 
+//ALL DA CHORDS!!!!!!!!!!!!!!!!!!!!!!!
+int allchords[]= {E, E, F, F, Fs, Fs, G, G, Gs, Gs, A, A, As, As, B, B, C, C,Cs, Cs, D, D, Ds, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
+int allchords_majorminor[]= {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+int allchords_timing[]={1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+const int allchord_numchords = sizeof(allchords)/sizeof(allchords[0]);
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(9600);
@@ -238,6 +243,18 @@ void LCDDisplay() {
           lcd.scrollDisplayLeft();
           delay(50);
         }
+      }
+      break;
+      case 5:
+      songname = "All the chords";
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print(songname);
+      delay(100);
+      if(songname.length()>16){
+        for(int i=17; i<songname.length(); i++)
+        lcd.scrollDisplayLeft();
+        delay(50);
       }
       break;
     default:
