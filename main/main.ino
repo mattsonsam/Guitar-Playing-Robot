@@ -1,3 +1,6 @@
+//TO DO:reformat iron man to fit in regular code
+//edits to push
+
 //-------------------------------------SETUP VARIABLES----------------------------------------------------------------------------------------------------
 #include <AccelStepper.h>
 #include <MultiStepper.h>
@@ -23,9 +26,9 @@ int d7Pin = 29;
 
 LiquidCrystal lcd(rsPin, enablePin, d4Pin, d5Pin, d6Pin, d7Pin);
 
-int yellowButton = 31;
-int greenButton = 33;
-int blueButton = 35;
+int backButton = 31;
+int playButton = 33;
+int forwardButton = 35;
 
 long fret_strokelengthmm = 400; //the length of the entire fretting linear rail
 double fret_step_per_rev = 200; // steps per revolution of stepper
@@ -58,7 +61,9 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 3; //number of songs we can play, is summed up later
+int numOfSongs = 6; //number of songs we can play, is summed up later
+
+String songname;
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -67,10 +72,10 @@ int numOfSongs = 3; //number of songs we can play, is summed up later
 
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
 
-int E = 0; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
+int E = 3; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
 //no E sharp
-int F = 38 + E; int FPos = 1;
-int Fs = 62 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
+int F = 35 + E; int FPos = 1;
+int Fs = 65 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
 int G = 97 + E; int GPos = 3;
 int Gs = 128 + E; int GsPos = 4;
 int A = 155 + E; int APos = 5;
@@ -80,12 +85,12 @@ int B = 204 + E; int BPos = 7;
 int C = 226 + E; int CPos = 8;
 int Cs = 245 + E; int CsPos = 9;
 int D = 268 + E; int DPos = 10;
-int Ds = 289 + E; int DsPos = 11;
+int Ds = 286 + E; int DsPos = 11;
 
 int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
 
 //-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
-//the song needs to be input once as a string matrix and once as a numerical matrix
+
 
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
 int cant_help_falling[] = {C, E, A, F, C, G, F, G, A, F, C, G, C, C, E, A, F, C, G, F, G, A, F, C, G, C};
@@ -102,21 +107,36 @@ int hotelcalifornia_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 const int hotelcalifornia_numchords = sizeof(hotelcalifornia) / (sizeof(hotelcalifornia[0]));
 
 //IRONMAN CHORD PROGRESSION
-int ironman[100] = {E, G, G, A, A, C, B, C, B, C, G, G, A, A, E, G, G, A, A, C, B, C, B, C, G, G, A, A}; //{B, D, D,E,E,G,Fs,G,Fs,G,D,D,E,E}
-int ironman_majorminor[100] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int ironman_timing[100] = {4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4}; //{.25,.25,.125,.125,.25,.0625, .0625,.0625,.0625,.125,.125,.125,.125,.25}
+int ironman[] = {E, G, G, A, A, C, B, C, B, C, G, G, A, A, E, G, G, A, A, C, B, C, B, C, G, G, A, A}; //{B, D, D,E,E,G,Fs,G,Fs,G,D,D,E,E}
+int ironman_majorminor[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int ironman_timing[] = {4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4}; //{.25,.25,.125,.125,.25,.0625, .0625,.0625,.0625,.125,.125,.125,.125,.25}
 const int ironman_numchords = sizeof(ironman) / sizeof(ironman[0]);
 
+//BROWN EYED GIRL CHORD PROGRESSION
+int browneyed[] = {G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, C, D, G, E, C, D, G, Ds};
+int browneyed_majorminor[]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+int browneyed_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1};
+const int browneyed_numchords = sizeof(browneyed) / sizeof(browneyed[0]);
 
+//ALL DA CHORDS!!!!!!!!!!!!!!!!!!!!!!!
+int allchords[] = {E, E, F, F, Fs, Fs, G, G, Gs, Gs, A, A, As, As, B, B, C, C, Cs, Cs, D, D, Ds, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
+int allchords_majorminor[] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+int allchords_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+const int allchords_numchords = sizeof(allchords) / sizeof(allchords[0]);
+// Shot the Sheriff
+int shot_the_sheriff[] = {G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G, C, G};
+int shot_the_sheriff_majorminor[] = {0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+int shot_the_sheriff_timing[] =    {2, 2, 3, 2, 2, 3, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 3, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 3, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 3};
+const int shot_the_sheriff_numchords = sizeof(shot_the_sheriff) / sizeof(shot_the_sheriff[0]);
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(9600);
   pinMode(strumhome, INPUT_PULLUP); //sets two limit switches as inputs with internal resistors
   pinMode(frethome, INPUT_PULLUP);
 
-  pinMode(yellowButton, INPUT_PULLUP);
-  pinMode(greenButton, INPUT_PULLUP);
-  pinMode(blueButton, INPUT_PULLUP);
+  pinMode(backButton, INPUT_PULLUP);
+  pinMode(playButton, INPUT_PULLUP);
+  pinMode(forwardButton, INPUT_PULLUP);
 
   lcd.begin(16, 2);
   lcd.clear();
@@ -135,8 +155,9 @@ void setup() {
 
   Serial.print("Hotel California # chords: "); Serial.println(hotelcalifornia_numchords);
   Serial.print("Falling In Love # chords: "); Serial.println(cant_help_falling_numchords);
-  Serial.print("Rotation Value: "); Serial.println(rotationValue);
-  Serial.print("Number of Songs: "); Serial.println(numOfSongs);
+  Serial.print("Iron Man # chords: "); Serial.println(ironman_numchords);
+  Serial.print("Brown Eyed Girl # chords: "); Serial.println(browneyed_numchords);
+  LCDDisplay();
 
 }
 
@@ -146,94 +167,20 @@ void setup() {
 //-------------------------------------START VOID LOOP------------------------------------------------------------
 
 void loop() { //here is where we will call all our functions
-  switch (rotationValue) { //use a switch statement to determine which song to display
-    case 1:
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Hotel California");
-      break;
-    case 2:
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("I Can't Help Falling");
-      lcd.setCursor(0, 1);
-      lcd.print("In Love With You");
-      break;
-    case 3:
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Ironman");
-      break;
-    default:
-      Serial.println("You done fucked up somehow...");
-      break;
+
+  if (digitalRead(backButton) == LOW) {
+    backButtonPressed();
+    LCDDisplay();
   }
 
-  if (digitalRead(yellowButton) == LOW) {
-    //yellow button pressed, decrease value
-    Serial.println("Yellow Button Pressed");
-    Serial.println(rotationValue);
-    if (rotationValue == 1) {
-      rotationValue = numOfSongs;
-      Serial.println("resetting value to 2");
-    } else {
-      rotationValue = rotationValue - 1;
-      Serial.println("Decreasing value");
-    }
-    Serial.println(rotationValue);
-    delay(200);
+  if (digitalRead(forwardButton) == LOW) {
+    forwardButtonPressed();
+    LCDDisplay();
   }
 
-  if (digitalRead(blueButton) == LOW) {
-    Serial.println("Blue Button Pressed");
-    Serial.println(rotationValue);
-    //blue button pressed, increase value
-    if (rotationValue == numOfSongs) {
-      rotationValue = 1;
-      Serial.println("resetting value to 1");
-    } else {
-      rotationValue = rotationValue + 1;
-      Serial.println("increasing value to 2");
-    }
-    Serial.println(rotationValue);
-    delay(200);
-  }
-
-  if (digitalRead(greenButton) == LOW) {
-    Serial.println("Green Button Pressed, Playing Song");
-    Serial.println(rotationValue);
-    switch (rotationValue) { //use a switch statement to determine which song to display
-      case 1:
-        strumPosLeft = 0;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Playing:");
-        lcd.setCursor(0, 1);
-        lcd.print("Hotel California");
-        playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
-        break;
-      case 2:
-        strumPosLeft = 0;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Playing:");
-        lcd.setCursor(0, 1);
-        lcd.print("Can't Help Falling");
-        playsong(cant_help_falling, cant_help_falling_majorminor, cant_help_falling_timing, 100, 3, cant_help_falling_numchords);
-        break;
-      case 3:
-        strumPosLeft = 30;
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Playing:");
-        lcd.setCursor(0, 1);
-        lcd.print("Ironman");
-        playIronman(ironman,ironman_majorminor, ironman_timing,600, 4, ironman_numchords);
-        break;
-      default:
-        Serial.println("You done fucked up somehow...");
-        break;
-    }
+  if (digitalRead(playButton) == LOW) {
+    playButtonPress();
+    LCDDisplay();
   }
 
 }
@@ -243,6 +190,213 @@ void loop() { //here is where we will call all our functions
 
 
 //------------------------------------START FUNCTIONS-------------------------------------------------------------
+//-----LCD function------
+void LCDDisplay() {
+  switch (rotationValue) { //use a switch statement to determine which song to display
+    case 1:
+      songname = "Hotel California";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 2:
+      songname = "Can't Help Fallin In Love w/ You";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(1000);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 3:
+      songname = "Ironman";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 4:
+      songname = "Brown Eyed Girl";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 5:
+      songname = "All the chords";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 6:
+      songname = "I Shot the Sheriff";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    default:
+      Serial.println("LCDDisplay: You done fucked up somehow...");
+      break;
+  }
+}
+//---End LCD Functions -----
+
+//------Button Functions-------
+void playButtonPress() {
+  Serial.println("Play Button Pressed, Playing Song");
+  Serial.println(rotationValue);
+  switch (rotationValue) { //use a switch statement to determine which song to display
+    case 1:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Hotel California");
+      playsong(hotelcalifornia, hotelcalifornia_majorminor, hotelcalifornia_timing, 74, 4, hotelcalifornia_numchords);
+      break;
+    case 2:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Can't Help Falling");
+      playsong(cant_help_falling, cant_help_falling_majorminor, cant_help_falling_timing, 100, 3, cant_help_falling_numchords);
+      break;
+    case 3:
+      strumPosLeft = 30;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Ironman");
+      playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
+      break;
+    case 4:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Brown Eyed Girl");
+      playsong(browneyed, browneyed_majorminor, browneyed_timing, 100, 4, browneyed_numchords);
+      break;
+    case 5:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("All the chords");
+      playsong(allchords, allchords_majorminor, allchords_timing, 80, 4, allchords_numchords);
+      break;
+    case 6:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Shot the Sheriff");
+      playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 100 , 4, shot_the_sheriff_numchords);
+      break;
+    default:
+      Serial.println("Play Button Press: You done fucked up somehow...");
+      break;
+  }
+}
+
+void backButtonPressed() {
+  //back button pressed, decrease value
+  Serial.println("Back Button Pressed");
+  Serial.println(rotationValue);
+  if (rotationValue == 1) {
+    rotationValue = numOfSongs;
+    Serial.println("resetting value to 2");
+  } else {
+    rotationValue = rotationValue - 1;
+    Serial.println("Decreasing value");
+  }
+  Serial.println(rotationValue);
+  delay(200);
+}
+
+void forwardButtonPressed() {
+  Serial.println("Forward Button Pressed");
+  Serial.println(rotationValue);
+  //blue button pressed, increase value
+  if (rotationValue == numOfSongs) {
+    rotationValue = 1;
+    Serial.println("resetting value to 1");
+  } else {
+    rotationValue = rotationValue + 1;
+    Serial.println("increasing value to 2");
+  }
+  Serial.println(rotationValue);
+  delay(200);
+}
+//----End button functions----
 //---servos---
 void servosUp() { //both servos up
   majorminor.write(majorminor_up);
@@ -303,28 +457,32 @@ void gotochord(int chordAsNum, bool major, double t) { //posInSongMatrixStrings 
 //----------------PLAY A SONG----------------
 
 void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) {
-  //---------------------calculate constants and stuff---------------//
+  //---------------------calculate general values and establish variables---------------//
   double BPS = tempo / 60; //beats per second
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
-  Serial.print("Secs per measure: ");  Serial.println(secs_per_measure);
- // if (rotationValue == 3) {
- //   double strum_time = .25;
+
+  // if (rotationValue == 3) {
+  //   double strum_time = .25;
   //} else {
-    double strum_time = (secs_per_measure / 4);
- // }
+  double strum_time = (secs_per_measure / 4);
+  // }
 
-  Serial.print("strum time in secs: "); Serial.println(strum_time);
   double pauseBetweenStrums = ((secs_per_measure - (2 * strum_time)) / 3);
-  Serial.print("pause time in secs: "); Serial.println(pauseBetweenStrums);
-
-  double strum_timemillis = strum_time * 1000;
   double pauseBetweenStrumsMillis = pauseBetweenStrums * 1000;
-  Serial.print("Strum time in millis: "); Serial.println(strum_timemillis);
-  Serial.print("Pause time in millis: "); Serial.println(pauseBetweenStrumsMillis);
+  double strum_timemillis = strum_time * 1000;
 
   bool firstChord_mmstate; //false = minor, true = major
   bool nextChord_mmstate; //false=minor, true =major
+
+  //-------------------Printing calculated values for troubleshooting--------
+  Serial.print("Secs per measure: ");  Serial.println(secs_per_measure);
+  Serial.print("strum time in secs: "); Serial.println(strum_time);
+  Serial.print("pause time in secs: "); Serial.println(pauseBetweenStrums);
+  Serial.print("Strum time in millis: "); Serial.println(strum_timemillis);
+  Serial.print("Pause time in millis: "); Serial.println(pauseBetweenStrumsMillis);
+
+
   //---------------------preparing to play--------------------//
   servosChangingFrets();
   delay(500);
@@ -340,27 +498,17 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   gotochord(songchords[0], firstChord_mmstate, 1);
   //----------------------begin playing---------------------//
   for (int i = 0; i < numchords; i++) {
-    Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
-
+    //------Calculate constants based on the chord being played---------
     double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord lasts for
     double current_chord_timeMillis = current_chord_time * 1000;
     double time_let_ring_millis = current_chord_timeMillis - pauseBetweenStrumsMillis; //chord plays for entire length minus the time of one pause, spends that pause time moving to the next chord
 
-    //double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for, 75% of time the current chord plays for
-    //int time_let_ring_millis = (time_let_ring * 1000);
+
+    //--------Print out values for debugging-------
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
-
-    //double transition_time = (current_chord_time * transition_ratio); //time to let the chords change, 25% of total time , replaced by pauseBetweenStrumsMillis
-
-
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
 
 
-    if (song_majorminor[i + 1] == 1) { //determine major minor servo position
-      nextChord_mmstate = true;
-    } else {
-      nextChord_mmstate = false;
-    }
 
     unsigned int timeBeforeStrum = millis();
     Serial.print("Time before strum: "); Serial.println(timeBeforeStrum);
@@ -384,6 +532,14 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     }
 
     Serial.println("Completed strum");
+
+    if (song_majorminor[i + 1] == 1) { //determine major minor servo position for the next chord
+      nextChord_mmstate = true;
+    } else {
+      nextChord_mmstate = false;
+    }
+
+
     unsigned int timeAfterStrum = millis();
     Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
 
@@ -394,81 +550,82 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     Serial.print("This much time remaining on chord: "); Serial.println(remainingTime);
 
     int remainingTimeinSec = remainingTime / 1000;
-    gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec);
-    Serial.print("Moved to chord: "); Serial.println(chordMatrix[songchords[i + 1]]);
-  }
+    gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec); //go to the next chord
 
+    if (digitalRead(forwardButton) == LOW) { //check for stop button pressed (forward arrow)
+      return;
+    }
+  }
+  LCDDisplay();
   Serial.println("Completed song");
+
 }
 
 
 //----------END PLAYING A SONG--------------
 //-----------PLAY IRONMAN-------
-void playIronman(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords){
+void playIronman(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) {
   //---------------------calculate constants and stuff---------------//
-  double strum_time=0.25; //time to make strummer move across the strings in seconds
-  double BPS=tempo/60;  //beats per second
-  double SPB=1/BPS; //seconds per beat
-  double secs_per_measure= time_sig_numerator*SPB; //multiplies the time of each beat by the number of beats in a measure
-  double transition_ratio=0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
+  double strum_time = 0.25; //time to make strummer move across the strings in seconds
+  double BPS = tempo / 60; //beats per second
+  double SPB = 1 / BPS; //seconds per beat
+  double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
+  double transition_ratio = 0.25; //what fraction of the time dedicated to each chord is given to transitioning to the next chord
   double transition_time;
   int last_chord;
-//---------------------preparing to play--------------------//
+  //---------------------preparing to play--------------------//
   servosChangingFrets();
   delay(1000);
-  strum(0.5,strumPosRight);
+  strum(0.5, strumPosRight);
   delay(1000);
-  bool first_state=false;
-  if(song_majorminor[0]==1){
-    first_state=true;
+  bool first_state = false;
+  if (song_majorminor[0] == 1) {
+    first_state = true;
   }
-  gotochord(songchords[0],first_state,1);
-//----------------------begin playing---------------------//
-  for(int i=0; i<numchords; i++){ ////*************************** not sure if num_chords is working
-    Serial.println(i); ///************************* it appears to play the first two or three notes, then quickly iterate through i=2 to i=25
-    
+  gotochord(songchords[0], first_state, 1);
+  //----------------------begin playing---------------------//
+  for (int i = 0; i < numchords; i++) {
+    Serial.println(i);
+    int next_chord = songchords[i + 1];
+    bool next_chord_state = false; //false=minor, true =major
 
-      
-      int next_chord=songchords[i+1];
-      bool next_chord_state=false; //false=minor, true =major
-      //int current_num_measures= songtiming[i+1]-songtiming[i]; //number of measures that current chord takes up
-      int current_num_measures=songtiming[i];
-      double current_chord_time= current_num_measures*secs_per_measure; //seconds that current chord takes up
-      if(song_majorminor[i+1]==1){
-        next_chord_state=true;
-      }
-      double time_let_ring=(1-transition_ratio)*current_chord_time; //time to let the current chord be played for
+    int current_num_measures = songtiming[i];
+    double current_chord_time = current_num_measures * secs_per_measure; //seconds that current chord takes up
+    if (song_majorminor[i + 1] == 1) {
+      next_chord_state = true;
+    }
 
-      /*if(next_chord_state=true){
-        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time+majorminor_time);
-      }
-      if(next_chord_state=false){
-        transition_time= (current_chord_time*transition_ratio)-(servosChangingFretsTime+muting_time);
-      }*/
-      transition_time=(current_chord_time*transition_ratio);
-     
+    double time_let_ring = (1 - transition_ratio) * current_chord_time; //time to let the current chord be played for
 
-      if(i%2==0){ // assumes that strummer starts at strumPosRight
-        strum(strum_time, strumPosLeft);
-      }
-      if(i%2!=0){
-        strum(strum_time,strumPosRight);
-      }
-      
+    transition_time = (current_chord_time * transition_ratio);
 
-      delay((time_let_ring-(strum_time))*1000); //let the chord ring out
 
-      gotochord(next_chord,next_chord_state,transition_time);
+    if (i % 2 == 0) { // assumes that strummer starts at strumPosRight
+      strum(strum_time, strumPosLeft);
+    }
+    if (i % 2 != 0) {
+      strum(strum_time, strumPosRight);
+    }
 
-      last_chord=i+1;
-    
+
+    delay((time_let_ring - (strum_time)) * 1000); //let the chord ring out
+
+    gotochord(next_chord, next_chord_state, transition_time);
+
+    last_chord = i + 1;
+    if (digitalRead(forwardButton) == LOW) {
+      return;
+    }
   }
-  if((last_chord%2==0)&&(strumming.currentPosition()>strum_mid)){ // assumes that strummer starts at strumPosRight
+  if ((last_chord % 2 == 0) && (strumming.currentPosition() > strum_mid)) { // assumes that strummer starts at strumPosRight
     strum(strum_time, strumPosLeft);
   }
-  if((last_chord%2!=0)&&(strumming.currentPosition()<strum_mid)){
-    strum(strum_time,strumPosRight);
+  if ((last_chord % 2 != 0) && (strumming.currentPosition() < strum_mid)) {
+    strum(strum_time, strumPosRight);
   }
+  LCDDisplay();
+  Serial.println("Completed song");
+
 }
 
 //-----------------------------------------END FUNCTIONS--------------------------------------------------------------
