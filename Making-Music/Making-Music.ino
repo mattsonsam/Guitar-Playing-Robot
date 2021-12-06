@@ -72,9 +72,9 @@ String songname;
 
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
 
-int E = 0; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
+int E = 3; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
 //no E sharp
-int F = 38 + E; int FPos = 1;
+int F = 35 + E; int FPos = 1;
 int Fs = 65 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
 int G = 97 + E; int GPos = 3;
 int Gs = 128 + E; int GsPos = 4;
@@ -83,9 +83,9 @@ int As = 181 + E; int AsPos = 6;
 int B = 204 + E; int BPos = 7;
 //no B sharp
 int C = 226 + E; int CPos = 8;
-int Cs = 247 + E; int CsPos = 9;
+int Cs = 245 + E; int CsPos = 9;
 int D = 268 + E; int DPos = 10;
-int Ds = 289 + E; int DsPos = 11;
+int Ds = 286 + E; int DsPos = 11;
 
 int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
 
@@ -359,7 +359,7 @@ void playButtonPress() {
       lcd.print("Playing:");
       lcd.setCursor(0, 1);
       lcd.print("Shot the Sheriff");
-      playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 150 , 4, shot_the_sheriff_numchords);
+      playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 100 , 4, shot_the_sheriff_numchords);
       break;
     default:
       Serial.println("Play Button Press: You done fucked up somehow...");
