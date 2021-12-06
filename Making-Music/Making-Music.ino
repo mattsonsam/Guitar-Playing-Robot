@@ -359,7 +359,7 @@ void playButtonPress() {
       lcd.print("Playing:");
       lcd.setCursor(0, 1);
       lcd.print("Shot the Sheriff");
-      playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 100 , 4, shot_the_sheriff_numchords);
+      playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 150 , 4, shot_the_sheriff_numchords);
       break;
     default:
       Serial.println("Play Button Press: You done fucked up somehow...");
@@ -462,13 +462,9 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
 
-  // if (rotationValue == 3) {
-  //   double strum_time = .25;
-  //} else {
-  double strum_time = (secs_per_measure / 4);
-  // }
+  double strum_time = ((secs_per_measure) / 4);
+  double pauseBetweenStrums = ((secs_per_measure - (2 * strum_time)) / 2);
 
-  double pauseBetweenStrums = ((secs_per_measure - (2 * strum_time)) / 3);
   double pauseBetweenStrumsMillis = pauseBetweenStrums * 1000;
   double strum_timemillis = strum_time * 1000;
 
@@ -501,14 +497,11 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     //------Calculate constants based on the chord being played---------
     double current_chord_time = songtiming[i] * secs_per_measure; //seconds that current chord lasts for
     double current_chord_timeMillis = current_chord_time * 1000;
-    double time_let_ring_millis = current_chord_timeMillis - pauseBetweenStrumsMillis; //chord plays for entire length minus the time of one pause, spends that pause time moving to the next chord
+    double time_let_ring_millis = current_chord_timeMillis - pauseBetweenStrumsMillis - 100; //chord plays for entire length minus the time of one pause, spends that pause time moving to the next chord
 
 
     //--------Print out values for debugging-------
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
-    Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
-
-
 
     unsigned int timeBeforeStrum = millis();
     Serial.print("Time before strum: "); Serial.println(timeBeforeStrum);
@@ -519,17 +512,24 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
     int numStrumLoops = floor(time_let_ring_millis / timeToCompleteStrumMillis);
     Serial.print("Loops: "); Serial.println(numStrumLoops);
-    for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
-      strum(strum_time, strumPosLeft);
-      delay(pauseBetweenStrumsMillis);
-      strum(strum_time, strumPosRight);
-
-      if (strumLoops == (numStrumLoops - 1)) {
-        delay(0);
-      } else {
+    if (numStrumLoops != 0) {
+      for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
+        strum(strum_time, strumPosLeft);
         delay(pauseBetweenStrumsMillis);
+        strum(strum_time, strumPosRight);
+
+        if (strumLoops == (numStrumLoops - 1)) {
+          delay(0);
+        } else {
+          delay(pauseBetweenStrumsMillis);
+        }
       }
+    } else {
+      strum(strum_time/2.5,strumPosLeft);
+      delay(pauseBetweenStrumsMillis/4);
+      strum(strum_time/2.5, strumPosRight);
     }
+
 
     Serial.println("Completed strum");
 
@@ -538,7 +538,6 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     } else {
       nextChord_mmstate = false;
     }
-
 
     unsigned int timeAfterStrum = millis();
     Serial.print("Time after strum: "); Serial.println(timeAfterStrum);
@@ -550,6 +549,9 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
     Serial.print("This much time remaining on chord: "); Serial.println(remainingTime);
 
     int remainingTimeinSec = remainingTime / 1000;
+    if(remainingTimeinSec <1 && rotationValue==6){
+      remainingTimeinSec =1;
+    }
     gotochord(songchords[i + 1], nextChord_mmstate, remainingTimeinSec); //go to the next chord
 
     if (digitalRead(forwardButton) == LOW) { //check for stop button pressed (forward arrow)
