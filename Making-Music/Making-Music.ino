@@ -1,4 +1,5 @@
 //TO DO:reformat iron man to fit in regular code
+//edits to push
 
 //-------------------------------------SETUP VARIABLES----------------------------------------------------------------------------------------------------
 #include <AccelStepper.h>
@@ -60,7 +61,9 @@ int muting_time = 0.4; //variables representing the time in seconds it takes for
 
 int rotationValue = 1; // start at the first song
 
-int numOfSongs = 3; //number of songs we can play, is summed up later
+int numOfSongs = 6; //number of songs we can play, is summed up later
+
+String songname;
 
 
 //---------------------------------------Experimental variables, these may change----------------------------------------------------------------------
@@ -69,10 +72,10 @@ int numOfSongs = 3; //number of songs we can play, is summed up later
 
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
 
-int E = 0; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
+int E = 3; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
 //no E sharp
-int F = 38 + E; int FPos = 1;
-int Fs = 62 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
+int F = 35 + E; int FPos = 1;
+int Fs = 65 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
 int G = 97 + E; int GPos = 3;
 int Gs = 128 + E; int GsPos = 4;
 int A = 155 + E; int APos = 5;
@@ -82,7 +85,7 @@ int B = 204 + E; int BPos = 7;
 int C = 226 + E; int CPos = 8;
 int Cs = 245 + E; int CsPos = 9;
 int D = 268 + E; int DPos = 10;
-int Ds = 289 + E; int DsPos = 11;
+int Ds = 286 + E; int DsPos = 11;
 
 int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
 
@@ -109,7 +112,22 @@ int ironman_majorminor[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 int ironman_timing[] = {4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 2, 2, 4, 1, 1, 1, 1, 2, 2, 2, 2, 4}; //{.25,.25,.125,.125,.25,.0625, .0625,.0625,.0625,.125,.125,.125,.125,.25}
 const int ironman_numchords = sizeof(ironman) / sizeof(ironman[0]);
 
+//BROWN EYED GIRL CHORD PROGRESSION
+int browneyed[] = {G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, G, C, G, D, C, D, G, E, C, D, G, Ds};
+int browneyed_majorminor[]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+int browneyed_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 , 1, 1, 1, 1, 1, 1};
+const int browneyed_numchords = sizeof(browneyed) / sizeof(browneyed[0]);
 
+//ALL DA CHORDS!!!!!!!!!!!!!!!!!!!!!!!
+int allchords[] = {E, E, F, F, Fs, Fs, G, G, Gs, Gs, A, A, As, As, B, B, C, C, Cs, Cs, D, D, Ds, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
+int allchords_majorminor[] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+int allchords_timing[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+const int allchords_numchords = sizeof(allchords) / sizeof(allchords[0]);
+// Shot the Sheriff
+int shot_the_sheriff[] = {G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G, C, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, Ds, D, G, G, C, G, G, C, G};
+int shot_the_sheriff_majorminor[] = {0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+int shot_the_sheriff_timing[] =    {2, 2, 3, 2, 2, 3, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 3, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 3, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 3};
+const int shot_the_sheriff_numchords = sizeof(shot_the_sheriff) / sizeof(shot_the_sheriff[0]);
 //------------------------------------SETUP FUNCTION-------------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(9600);
@@ -138,8 +156,8 @@ void setup() {
   Serial.print("Hotel California # chords: "); Serial.println(hotelcalifornia_numchords);
   Serial.print("Falling In Love # chords: "); Serial.println(cant_help_falling_numchords);
   Serial.print("Iron Man # chords: "); Serial.println(ironman_numchords);
-  Serial.print("Rotation Value: "); Serial.println(rotationValue);
-  Serial.print("Number of Songs: "); Serial.println(numOfSongs);
+  Serial.print("Brown Eyed Girl # chords: "); Serial.println(browneyed_numchords);
+  LCDDisplay();
 
 }
 
@@ -150,18 +168,19 @@ void setup() {
 
 void loop() { //here is where we will call all our functions
 
-  LCDDisplay();
-
   if (digitalRead(backButton) == LOW) {
     backButtonPressed();
+    LCDDisplay();
   }
 
   if (digitalRead(forwardButton) == LOW) {
     forwardButtonPressed();
+    LCDDisplay();
   }
 
   if (digitalRead(playButton) == LOW) {
     playButtonPress();
+    LCDDisplay();
   }
 
 }
@@ -175,24 +194,109 @@ void loop() { //here is where we will call all our functions
 void LCDDisplay() {
   switch (rotationValue) { //use a switch statement to determine which song to display
     case 1:
+      songname = "Hotel California";
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Hotel California");
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
       break;
     case 2:
+      songname = "Can't Help Fallin In Love w/ You";
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("I Can't Help Falling");
-      lcd.setCursor(0, 1);
-      lcd.print("In Love With You");
+      lcd.print(songname);
+      delay(1000);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
       break;
     case 3:
+      songname = "Ironman";
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Ironman");
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 4:
+      songname = "Brown Eyed Girl";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 5:
+      songname = "All the chords";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      break;
+    case 6:
+      songname = "I Shot the Sheriff";
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
+      delay(100);
+      if (songname.length() > 16) {
+        for (int i = 17; i <= songname.length(); i = i + 2) {
+          lcd.scrollDisplayLeft();
+          lcd.scrollDisplayLeft();
+          delay(600);
+        }
+      }
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(songname);
       break;
     default:
-      Serial.println("You done fucked up somehow...");
+      Serial.println("LCDDisplay: You done fucked up somehow...");
       break;
   }
 }
@@ -230,8 +334,35 @@ void playButtonPress() {
       lcd.print("Ironman");
       playIronman(ironman, ironman_majorminor, ironman_timing, 600, 4, ironman_numchords);
       break;
+    case 4:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Brown Eyed Girl");
+      playsong(browneyed, browneyed_majorminor, browneyed_timing, 100, 4, browneyed_numchords);
+      break;
+    case 5:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("All the chords");
+      playsong(allchords, allchords_majorminor, allchords_timing, 80, 4, allchords_numchords);
+      break;
+    case 6:
+      strumPosLeft = 0;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Playing:");
+      lcd.setCursor(0, 1);
+      lcd.print("Shot the Sheriff");
+      playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 100 , 4, shot_the_sheriff_numchords);
+      break;
     default:
-      Serial.println("You done fucked up somehow...");
+      Serial.println("Play Button Press: You done fucked up somehow...");
       break;
   }
 }
@@ -425,7 +556,7 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       return;
     }
   }
-
+  LCDDisplay();
   Serial.println("Completed song");
 
 }
@@ -492,6 +623,7 @@ void playIronman(int songchords[], int song_majorminor[], int songtiming[], int 
   if ((last_chord % 2 != 0) && (strumming.currentPosition() < strum_mid)) {
     strum(strum_time, strumPosRight);
   }
+  LCDDisplay();
   Serial.println("Completed song");
 
 }
