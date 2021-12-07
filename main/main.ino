@@ -72,7 +72,7 @@ String songname;
 
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
 
-int E = 3; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
+int E = 4; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
 //no E sharp
 int F = 35 + E; int FPos = 1;
 int Fs = 65 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
@@ -93,10 +93,10 @@ int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all c
 
 
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
-int cant_help_falling[] = {C, E, A, F, C, G, F, G, A, F, C, G, C, C, E, A, F, C, G, F, G, A, F, C, G, C};
+int cant_help_falling[] = {C, E, A, F, C, G, F, G, A, F, C, G, C, C, E, A, F, C, G, F, G, A, F, C, G, C, C};
 int cant_help_falling_majorminor[] = {1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1};
 int cant_help_falling_timing[] = {1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1};
-const int cant_help_falling_numchords = sizeof(cant_help_falling) / sizeof(cant_help_falling[0]);
+const int cant_help_falling_numchords = 26; //sizeof(cant_help_falling) / sizeof(cant_help_falling[0]);
 
 
 //HOTEL CALIFORNIA CHORD PROGRESSION
