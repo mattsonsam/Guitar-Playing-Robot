@@ -1,5 +1,6 @@
-//TO DO:reformat iron man to fit in regular code
-//edits to push
+//Code written by Samuel Mattson and Amanda Vasconcelos for Mechanical Engineering Senior Capstone Guitar Playing Robot, December 2021
+//Please see readme for information about other members and LinkedIn profiles for members
+//This code will no longer be iterated upon by the entire group. Samuel Mattson is continuing work in an Independent Study
 
 //-------------------------------------SETUP VARIABLES----------------------------------------------------------------------------------------------------
 #include <AccelStepper.h>
@@ -24,9 +25,9 @@ int d5Pin = 25;
 int d6Pin = 27;
 int d7Pin = 29;
 
-LiquidCrystal lcd(rsPin, enablePin, d4Pin, d5Pin, d6Pin, d7Pin);
+LiquidCrystal lcd(rsPin, enablePin, d4Pin, d5Pin, d6Pin, d7Pin); //create LCD display
 
-int backButton = 31;
+int backButton = 31; //declare button pins for controlling LCD display
 int playButton = 33;
 int forwardButton = 35;
 
@@ -35,7 +36,7 @@ double fret_step_per_rev = 200; // steps per revolution of stepper
 double fret_mm_per_rev = 72; //linear distance travelled in one rotation of stepper
 double fret_mmPerStep = fret_mm_per_rev / fret_step_per_rev; //linear distance travelled in one step of the stepper
 
-long strum_strokelengthmm; //these need to be determined
+long strum_strokelengthmm; //these need to be determined manually based on the linear rail
 double strum_step_per_rev = 200;
 double strum_mm_per_rev = 72;
 double strum_mmPerStep = strum_mm_per_rev / strum_step_per_rev;
@@ -46,7 +47,7 @@ int strumHomingSpeed = -200;
 int majorminor_down = 30;
 int majorminor_up = 0;
 //int majorminor_angle = 45;
-int mute_down = 35; //this needs to be determined
+int mute_down = 35; //this needs to be determined based on what position fully mutes or unmutes
 int mute_up = 60; //this needs to be determined
 
 int strumPosLeft = 0;
@@ -72,7 +73,7 @@ String songname;
 
 //-----------------------------------Declare fretting chord positions, and timing relevent to hard coding songs-----------------------------------------
 
-int E = 4; int EPos = 0; //all other positions are based off E to accomodate for any moves in the limit switch
+int E = 3; int EPos = 0; //all other positions are based off E to accomodate for any moves in the homing limit switch
 //no E sharp
 int F = 35 + E; int FPos = 1;
 int Fs = 65 + E; int FsPos = 2; //the "s" in Fs stands for "sharp"
@@ -90,13 +91,13 @@ int Ds = 286 + E; int DsPos = 11;
 int chordMatrix[] = {E, F, Fs, G, Gs, A, As, B, C, Cs, D, Ds}; //matrix of all chords, chord position in matrix corresponds to pos variable
 
 //-------------------------------------SONG MATRIX-------------------------------------------------------------------------------------------------------
-
+//Declaring information needed to play songs
 
 //I CANT HELP FALLING IN LOVE WITH YOU CHORD PROGRESSION
-int cant_help_falling[] = {C, E, A, F, C, G, F, G, A, F, C, G, C, C, E, A, F, C, G, F, G, A, F, C, G, C, C};
-int cant_help_falling_majorminor[] = {1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1};
-int cant_help_falling_timing[] = {1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1};
-const int cant_help_falling_numchords = 26; //sizeof(cant_help_falling) / sizeof(cant_help_falling[0]);
+int cant_help_falling[] = {C, E, A, F, C, G, F, G, A, F, C, G, C, C, E, A, F, C, G, F, G, A, F, C, G, C};  //chord progression
+int cant_help_falling_majorminor[] = {1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1}; //binary data on major or minor chords
+int cant_help_falling_timing[] = {1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1}; //number of measures to play a chord for
+const int cant_help_falling_numchords = sizeof(cant_help_falling) / sizeof(cant_help_falling[0]); //number of chords in the song
 
 
 //HOTEL CALIFORNIA CHORD PROGRESSION
@@ -191,8 +192,8 @@ void loop() { //here is where we will call all our functions
 
 //------------------------------------START FUNCTIONS-------------------------------------------------------------
 //-----LCD function------
-void LCDDisplay() {
-  switch (rotationValue) { //use a switch statement to determine which song to display
+void LCDDisplay() { //function to determine what the LCD screen should display, only called when the display should change
+  switch (rotationValue) { //use a switch statement to determine which song to display, inefficient - ideally could replace all switch cases with matrix indexing
     case 1:
       songname = "Hotel California";
       lcd.clear();
@@ -296,14 +297,14 @@ void LCDDisplay() {
       lcd.print(songname);
       break;
     default:
-      Serial.println("LCDDisplay: You done fucked up somehow...");
+      Serial.println("Oops, condition not met...");
       break;
   }
 }
 //---End LCD Functions -----
 
 //------Button Functions-------
-void playButtonPress() {
+void playButtonPress() { //function to determine which song to play when the play button is pressed, based on the rotation value (rotation value is position in the rotation of songs), inefficient
   Serial.println("Play Button Pressed, Playing Song");
   Serial.println(rotationValue);
   switch (rotationValue) { //use a switch statement to determine which song to display
@@ -362,38 +363,28 @@ void playButtonPress() {
       playsong(shot_the_sheriff, shot_the_sheriff_majorminor, shot_the_sheriff_timing, 100 , 4, shot_the_sheriff_numchords);
       break;
     default:
-      Serial.println("Play Button Press: You done fucked up somehow...");
+      Serial.println("Oops, condition not met...");
       break;
   }
 }
 
 void backButtonPressed() {
   //back button pressed, decrease value
-  Serial.println("Back Button Pressed");
-  Serial.println(rotationValue);
   if (rotationValue == 1) {
     rotationValue = numOfSongs;
-    Serial.println("resetting value to 2");
   } else {
     rotationValue = rotationValue - 1;
-    Serial.println("Decreasing value");
   }
-  Serial.println(rotationValue);
   delay(200);
 }
 
 void forwardButtonPressed() {
-  Serial.println("Forward Button Pressed");
-  Serial.println(rotationValue);
-  //blue button pressed, increase value
+  //forward button pressed, increase value
   if (rotationValue == numOfSongs) {
     rotationValue = 1;
-    Serial.println("resetting value to 1");
   } else {
     rotationValue = rotationValue + 1;
-    Serial.println("increasing value to 2");
   }
-  Serial.println(rotationValue);
   delay(200);
 }
 //----End button functions----
@@ -403,13 +394,13 @@ void servosUp() { //both servos up
   muting.write(mute_up);
 }
 
-void servosChangingFrets() {
+void servosChangingFrets() { //major minor servo up, muting servo down to mute strings
   majorminor.write(majorminor_up);
   muting.write(mute_down);
 }
 
 //---go home----
-void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limitSwitch, int homingSpeed) {
+void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limitSwitch, int homingSpeed) { //moves the stepper motor until the linear rail carriage hits a limit switch
   long strokelength = ceil(strokeLengthmm / mmPerStep); //calculates number of steps to traverse entire rail
   stepper.moveTo(strokelength);
 
@@ -424,7 +415,7 @@ void goHome(long strokeLengthmm, long mmPerStep, AccelStepper stepper, int limit
 
 
 //---strum---
-void strum(float strumTime, int positionmm) {
+void strum(float strumTime, int positionmm) { //move the strumming stepper based on a time calculated in playsong() and a position
   long target = floor(positionmm / strum_mmPerStep);
   float strumSpeed = target / strumTime;
 
@@ -434,11 +425,9 @@ void strum(float strumTime, int positionmm) {
 }
 
 
-void gotochord(int chordAsNum, bool major, double t) { //posInSongMatrixStrings will be the counter in a for loop
+void gotochord(int chordAsNum, bool major, double t) { //moves to a chord and sets the major minor servo in position, moves to this chord in time t
   servosChangingFrets();
-  bool is_major = major;
-  //bool major = majorMinorBoolean(arrayposition, major_minor_array);
-  long targetsteps = floor(chordAsNum / fret_mmPerStep);
+  long targetsteps = floor(chordAsNum / fret_mmPerStep); //calculate a velocity and acceleration from the number of steps needed to move from current chord to the next chord
   float accel = (4.5 * (fretting.currentPosition() - targetsteps)) / pow(t, 2);
   float v_max = (1.5 * (fretting.currentPosition() - targetsteps)) / t;
   fretting.setSpeed(v_max);
@@ -447,26 +436,21 @@ void gotochord(int chordAsNum, bool major, double t) { //posInSongMatrixStrings 
   while (fretting.currentPosition() != fretting.targetPosition()) { //while not at the target position, execute steps
     fretting.run();
   }
-  muting.write(mute_up);
-  if (is_major == true) {
+  muting.write(mute_up); //put the muting servo up
+  if (major == true) { //determine if the major servo should be up or down
     majorminor.write(majorminor_down);
   }
-  muting.write(mute_up);
 }
 
 //----------------PLAY A SONG----------------
 
-void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) {
+void playsong(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) { //function to play a song, takes in data provided about song
   //---------------------calculate general values and establish variables---------------//
   double BPS = tempo / 60; //beats per second
   double SPB = 1 / BPS; //seconds per beat
   double secs_per_measure = time_sig_numerator * SPB; //multiplies the time of each beat by the number of beats in a measure
 
-  // if (rotationValue == 3) {
-  //   double strum_time = .25;
-  //} else {
   double strum_time = (secs_per_measure / 4);
-  // }
 
   double pauseBetweenStrums = ((secs_per_measure - (2 * strum_time)) / 3);
   double pauseBetweenStrumsMillis = pauseBetweenStrums * 1000;
@@ -506,18 +490,14 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
 
     //--------Print out values for debugging-------
     Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
-    Serial.print("Time to play the chord for aka let ring: "); Serial.println(time_let_ring_millis);
-
-
 
     unsigned int timeBeforeStrum = millis();
     Serial.print("Time before strum: "); Serial.println(timeBeforeStrum);
 
-
     int timeToCompleteStrumMillis = (strum_timemillis + pauseBetweenStrumsMillis) * 2;
     Serial.print("Time to complete one strum: "); Serial.println(timeToCompleteStrumMillis);
 
-    int numStrumLoops = floor(time_let_ring_millis / timeToCompleteStrumMillis);
+    int numStrumLoops = floor(time_let_ring_millis / timeToCompleteStrumMillis); //determines how many times an entire strum can be executed while keeping on beat
     Serial.print("Loops: "); Serial.println(numStrumLoops);
     for (int strumLoops = 0; strumLoops < numStrumLoops; strumLoops++) {
       strum(strum_time, strumPosLeft);
@@ -556,14 +536,14 @@ void playsong(int songchords[], int song_majorminor[], int songtiming[], int tem
       return;
     }
   }
-  LCDDisplay();
+  LCDDisplay(); //update the LCD back to the song list
   Serial.println("Completed song");
 
 }
 
 
 //----------END PLAYING A SONG--------------
-//-----------PLAY IRONMAN-------
+//-----------PLAY IRONMAN------- //modified version of playsong() that just plays ironman using preset values, ideally this will be incorporated into playsong()
 void playIronman(int songchords[], int song_majorminor[], int songtiming[], int tempo, int time_sig_numerator, int numchords) {
   //---------------------calculate constants and stuff---------------//
   double strum_time = 0.25; //time to make strummer move across the strings in seconds
